@@ -51,7 +51,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
 	light->setDirection(lightDir[0], lightDir[1], lightDir[2]);
 	light->setPosition(lightPos[0], lightPos[1], lightPos[2]); //position and direction need to "match" since we are calculating the ortho matrix from the position
-	light->generateOrthoMatrix((float)sceneWidth/3, (float)sceneHeight/3, 0.1f, 100.f);
+	light->generateProjectionMatrix(0.1f, 100.f);
 
 }
 
@@ -104,7 +104,7 @@ void App1::depthPass()
 	// get the world, view, and projection matrices from the camera and d3d objects.
 	light->generateViewMatrix();
 	XMMATRIX lightViewMatrix = light->getViewMatrix();
-	XMMATRIX lightProjectionMatrix = light->getOrthoMatrix();
+	XMMATRIX lightProjectionMatrix = light->getProjectionMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
 	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
