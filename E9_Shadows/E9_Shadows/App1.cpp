@@ -12,6 +12,11 @@ float spherePos[3] = { 15.f, 2.f, -5.f };
 float teapotPos[3] = { 5.f, 2.f, -5.f };
 float teapotRot[3] = { 0,0,0 };
 float teapotScale[3] = { 0.3,0.3,0.3 };
+
+float lightPos[3] = { 0.f, 0.f, -20.f };
+float lightDir[3] = { 0.0f, -0.7f, 0.7f };
+float sceneCenter[3] = { 0.0f, 0.0f, 0.0f };
+float lightDstFromCenter = 10.0;
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
 	// Call super/parent init function (required!)
@@ -44,8 +49,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	light = new Light();
 	light->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
 	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
-	light->setDirection(0.0f, -0.7f, 0.7f);
-	light->setPosition(0.f, 0.f, -50.f);
+	light->setDirection(lightDir[0], lightDir[1], lightDir[2]);
+	light->setPosition(lightPos[0], lightPos[1], lightPos[2]); //position and direction need to "match" since we are calculating the ortho matrix from the position
 	light->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
 
 }
@@ -120,6 +125,11 @@ void App1::depthPass()
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
+	//Render light debug sphere
+	worldMatrix = XMMatrixTranslation(light->getPosition().x, light->getPosition().y, light->getPosition().z);
+	sphere->sendData(renderer->getDeviceContext());
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 	worldMatrix = renderer->getWorldMatrix();
 	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
@@ -172,6 +182,11 @@ void App1::finalPass()
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
 	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
+	//Render light debug sphere
+	worldMatrix = XMMatrixTranslation(light->getPosition().x, light->getPosition().y, light->getPosition().z);
+	sphere->sendData(renderer->getDeviceContext());
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
+	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 
 	renderer->setZBuffer(false);
@@ -197,6 +212,16 @@ void App1::gui()
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 
+	ImGui::Text("Light");
+	ImGui::DragFloat("LightDst2C", &lightDstFromCenter, 0.1, 0, 100);
+	ImGui::DragFloat3("SceneCenter", sceneCenter, 0.1f, -100, 100);
+	if(ImGui::DragFloat3("PositionLight", lightPos, 0.1f, -100, 100))
+		light->setPosition(lightPos[0], lightPos[1], lightPos[2]); //position and direction need to "match" since we are calculating the ortho matrix from the position
+	if (ImGui::SliderFloat3("DirLight", lightDir, -1, 1))
+		light->setDirection(lightDir[0], lightDir[1], lightDir[2]);
+	//position correction to match the light direction
+	light->setPosition(sceneCenter[0] - lightDir[0] * lightDstFromCenter, sceneCenter[1] - lightDir[1]* lightDstFromCenter, sceneCenter[2] - lightDir[2]* lightDstFromCenter);
+
 	ImGui::Text("Cube");
 	ImGui::DragFloat3("PositionCube", cubePos, 0.1f, -50, 50);
 	ImGui::Text("Sphere");
@@ -205,7 +230,6 @@ void App1::gui()
 	ImGui::DragFloat3("PositionTeapot", teapotPos, 0.1f, -50, 50);
 	ImGui::SliderFloat3("RotationTeapot", teapotRot, -3.14, 3.14);
 	ImGui::SliderFloat3("ScaleTeapot", teapotScale, 0, 3);
-
 
 	// Render UI
 	ImGui::Render();
