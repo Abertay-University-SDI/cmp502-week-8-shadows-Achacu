@@ -7,6 +7,11 @@ App1::App1()
 
 }
 
+float cubePos[3] = { -5.f, 2.f, -5.f };
+float spherePos[3] = { 15.f, 2.f, -5.f };
+float teapotPos[3] = { 5.f, 2.f, -5.f };
+float teapotRot[3] = { 0,0,0 };
+float teapotScale[3] = { 0.3,0.3,0.3 };
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
 	// Call super/parent init function (required!)
@@ -40,7 +45,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	light->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
 	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
 	light->setDirection(0.0f, -0.7f, 0.7f);
-	light->setPosition(0.f, 0.f, -10.f);
+	light->setPosition(0.f, 0.f, -50.f);
 	light->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
 
 }
@@ -104,22 +109,20 @@ void App1::depthPass()
 	depthShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	//Render cube
-	worldMatrix = XMMatrixTranslation(-5.f, 2.f, -5.f);
+	worldMatrix = XMMatrixTranslation(cubePos[0], cubePos[1], cubePos[2]);
 	cube->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
-	worldMatrix = XMMatrixTranslation(5.f, 2.f, -5.f);
+	worldMatrix = XMMatrixTranslation(spherePos[0], spherePos[1], spherePos[2]);
 	sphere->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 
 	worldMatrix = renderer->getWorldMatrix();
-	worldMatrix = XMMatrixTranslation(0.f, 7.f, 5.f);
-	XMMATRIX scaleMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-	worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);
+	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
 	// Render model
 	model->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
@@ -152,21 +155,19 @@ void App1::finalPass()
 
 	// Render model
 	worldMatrix = renderer->getWorldMatrix();
-	worldMatrix = XMMatrixTranslation(0.f, 7.f, 5.f);
-	XMMATRIX scaleMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-	worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);
+	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
 	model->sendData(renderer->getDeviceContext());
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
 	shadowShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 	//Render cube
-	worldMatrix = XMMatrixTranslation(-5.f, 2.f, -5.f);
+	worldMatrix = XMMatrixTranslation(cubePos[0], cubePos[1], cubePos[2]);
 	cube->sendData(renderer->getDeviceContext());
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
 	shadowShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
-	worldMatrix = XMMatrixTranslation(5.f, 2.f, -5.f);
+	worldMatrix = XMMatrixTranslation(spherePos[0], spherePos[1], spherePos[2]);
 	sphere->sendData(renderer->getDeviceContext());
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
 	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
@@ -195,6 +196,16 @@ void App1::gui()
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
+
+	ImGui::Text("Cube");
+	ImGui::DragFloat3("PositionCube", cubePos, 0.1f, -50, 50);
+	ImGui::Text("Sphere");
+	ImGui::DragFloat3("PositionSphere", spherePos, 0.1f, -50, 50);
+	ImGui::Text("Teapot");
+	ImGui::DragFloat3("PositionTeapot", teapotPos, 0.1f, -50, 50);
+	ImGui::SliderFloat3("RotationTeapot", teapotRot, -3.14, 3.14);
+	ImGui::SliderFloat3("ScaleTeapot", teapotScale, 0, 3);
+
 
 	// Render UI
 	ImGui::Render();
