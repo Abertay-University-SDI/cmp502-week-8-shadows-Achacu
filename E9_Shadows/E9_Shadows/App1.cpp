@@ -51,7 +51,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
 	light->setDirection(lightDir[0], lightDir[1], lightDir[2]);
 	light->setPosition(lightPos[0], lightPos[1], lightPos[2]); //position and direction need to "match" since we are calculating the ortho matrix from the position
-	light->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
+	light->generateOrthoMatrix((float)sceneWidth/3, (float)sceneHeight/3, 0.1f, 100.f);
 
 }
 
