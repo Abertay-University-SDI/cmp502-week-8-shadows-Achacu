@@ -45,7 +45,7 @@ bool isInShadow(Texture2D sMap, float2 uv, float4 lightViewPosition, float bias)
 	// Calculate the depth from the light.
     float lightDepthValue = lightViewPosition.z / lightViewPosition.w;
     lightDepthValue -= bias;
-
+    
 	// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
     if (lightDepthValue < depthValue)
     {
