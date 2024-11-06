@@ -37,6 +37,10 @@ private:
 	DepthShader* depthShader;
 
 	ShadowMap* shadowMap;
+
+	std::vector<Light*> dirLights;
+	std::vector</*Point*/Light*> pointLights;
+
 };
 
 #endif

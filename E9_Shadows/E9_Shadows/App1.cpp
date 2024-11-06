@@ -17,6 +17,18 @@ float lightPos[3] = { 0.f, 0.f, -20.f };
 float lightDir[3] = { 0.0f, -0.7f, 0.7f };
 float sceneCenter[3] = { 0.0f, 0.0f, 0.0f };
 float lightDstFromCenter = 10.0;
+
+//Initial light values
+float ambientColor[POINT_LIGHT_COUNT + DIR_LIGHT_COUNT][4] = { 0,0,0,1 };
+float diffuseColor[POINT_LIGHT_COUNT + DIR_LIGHT_COUNT][4] = { 1,1,1,1 };
+float specular[POINT_LIGHT_COUNT + DIR_LIGHT_COUNT][4] = { 0,0,0,0 }; //(color.rgb, specularPower)
+
+float direction[DIR_LIGHT_COUNT][3] = { 0,-1,0 };
+
+float position[POINT_LIGHT_COUNT + DIR_LIGHT_COUNT][3] = { 0,10,0 };
+//float attenuation[POINT_LIGHT_COUNT][3] = { 0.5f,0.125f,0.0f, 0.5f,0.125f,0.0f };
+
+
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
 	// Call super/parent init function (required!)
@@ -45,13 +57,28 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	// This is your shadow map
 	shadowMap = new ShadowMap(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
 
+	Light* dirLight;
+	for (int i = 0, j = POINT_LIGHT_COUNT; i < DIR_LIGHT_COUNT; i++, j++)
+	{
+		dirLight = new Light();
+		dirLights.push_back(dirLight);
+
+		dirLight->setPosition(position[i][0], position[i][1], position[i][2]);
+		dirLight->setDirection(direction[i][0], direction[i][1], direction[i][2]);
+		dirLight->setDiffuseColour(diffuseColor[j][0], diffuseColor[j][1], diffuseColor[j][2], diffuseColor[j][3]);
+		dirLight->setAmbientColour(ambientColor[j][0], ambientColor[j][1], ambientColor[j][2], ambientColor[j][3]);
+		dirLight->setSpecularColour(specular[j][0], specular[j][1], specular[j][2], 1.0f);
+		dirLight->setSpecularPower(specular[j][3]);
+		dirLight->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
+	}
+
 	// Configure directional light
 	light = new Light();
 	light->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
 	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
 	light->setDirection(lightDir[0], lightDir[1], lightDir[2]);
 	light->setPosition(lightPos[0], lightPos[1], lightPos[2]); //position and direction need to "match" since we are calculating the ortho matrix from the position
-	light->generateProjectionMatrix(0.1f, 100.f);
+	light->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
 
 }
 
@@ -102,9 +129,9 @@ void App1::depthPass()
 	shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
 
 	// get the world, view, and projection matrices from the camera and d3d objects.
-	light->generateViewMatrix();
-	XMMATRIX lightViewMatrix = light->getViewMatrix();
-	XMMATRIX lightProjectionMatrix = light->getProjectionMatrix();
+	dirLights[0]->generateViewMatrix();
+	XMMATRIX lightViewMatrix = dirLights[0]->getViewMatrix();
+	XMMATRIX lightProjectionMatrix = dirLights[0]->getOrthoMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
 	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
@@ -153,39 +180,38 @@ void App1::finalPass()
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 	XMMATRIX viewMatrix = camera->getViewMatrix();
 	XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
-
-
+	
 
 	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
 	// Render floor
 	mesh->sendData(renderer->getDeviceContext());
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, 
-		textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
+		textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), dirLights);
 	shadowShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	// Render model
 	worldMatrix = renderer->getWorldMatrix();
 	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
 	model->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), dirLights);
 	shadowShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 	//Render cube
 	worldMatrix = XMMatrixTranslation(cubePos[0], cubePos[1], cubePos[2]);
 	cube->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), dirLights);
 	shadowShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
 	worldMatrix = XMMatrixTranslation(spherePos[0], spherePos[1], spherePos[2]);
 	sphere->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), dirLights);
 	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 	//Render light debug sphere
 	worldMatrix = XMMatrixTranslation(light->getPosition().x, light->getPosition().y, light->getPosition().z);
 	sphere->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), light);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), dirLights);
 	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 
@@ -230,6 +256,43 @@ void App1::gui()
 	ImGui::DragFloat3("PositionTeapot", teapotPos, 0.1f, -50, 50);
 	ImGui::SliderFloat3("RotationTeapot", teapotRot, -3.14, 3.14);
 	ImGui::SliderFloat3("ScaleTeapot", teapotScale, 0, 3);
+
+	Light* dirLight;
+	int dirLightCount = dirLights.size();
+	for (int i = 0, j = pointLightCount; i < dirLightCount; i++, j++)
+	{
+		dirLight = dirLights[i];
+		ImGui::Text("DirectionalLight %d", i);
+
+		//ambient
+		ImGui::PushID(j);
+		if (ImGui::ColorEdit3("ambient", &ambientColor[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
+			dirLight->setAmbientColour(ambientColor[j][0], ambientColor[j][1], ambientColor[j][2], ambientColor[j][3]);
+		ImGui::PopID();
+
+		//diffuse
+		ImGui::PushID(j);
+		if (ImGui::ColorEdit3("diffuse", &diffuseColor[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
+			dirLight->setDiffuseColour(diffuseColor[j][0], diffuseColor[j][1], diffuseColor[j][2], diffuseColor[j][3]);
+		ImGui::PopID();
+
+		//specular
+		ImGui::PushID(j);
+		if (ImGui::ColorEdit3("specularColor", &specular[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
+			dirLight->setSpecularColour(specular[j][0], specular[j][1], specular[j][2], 1.0f);
+		ImGui::PopID();
+		ImGui::PushID(j); //ensures IDs are unique
+		if (ImGui::DragFloat("specularPower", &specular[j][3], 1, 1, 32))
+			dirLight->setSpecularPower(specular[j][3]);
+		ImGui::PopID();
+
+		//direction
+		ImGui::PushID(i);
+		if (ImGui::DragFloat3("direction", &direction[i][0], 0.1, -1, 1))
+			dirLight->setDirection(direction[i][0], direction[i][1], direction[i][2]);
+		ImGui::PopID();
+	}
+
 
 	// Render UI
 	ImGui::Render();

@@ -1,3 +1,5 @@
+#define DIR_LIGHT_COUNT 1
+
 
 Texture2D shaderTexture : register(t0);
 Texture2D depthMapTexture : register(t1);
@@ -5,11 +7,12 @@ Texture2D depthMapTexture : register(t1);
 SamplerState diffuseSampler  : register(s0);
 SamplerState shadowSampler : register(s1);
 
-cbuffer LightBuffer : register(b0)
+cbuffer DirectionalLightBuffer : register(b0)
 {
-	float4 ambient;
-	float4 diffuse;
-	float3 direction;
+    float4 ambientD[DIR_LIGHT_COUNT];
+    float4 diffuseD[DIR_LIGHT_COUNT];
+    float4 lightDir[DIR_LIGHT_COUNT];
+    float4 specularD[DIR_LIGHT_COUNT]; //(color.rgb, power)
 };
 
 struct InputType
@@ -21,11 +24,10 @@ struct InputType
 };
 
 // Calculate lighting intensity based on direction and normal. Combine with light colour.
-float4 calculateLighting(float3 lightDirection, float3 normal, float4 diffuse)
+float4 calculateLightingDirectional(float3 lightDir, float3 normal, float4 lightDiffuse)
 {
-    float intensity = saturate(dot(normal, lightDirection));
-    float4 colour = saturate(diffuse * intensity);
-    return colour;
+    float intensity = saturate(dot(normal, lightDir));
+    return saturate(lightDiffuse * intensity);
 }
 
 // Is the gemoetry in our shadow map
@@ -66,23 +68,32 @@ float2 getProjectiveCoords(float4 lightViewPosition)
 float4 main(InputType input) : SV_TARGET
 {
     float shadowMapBias = 0.005f; //low value -> self-shadowing artifacts, high value -> some parts of shadow are lost
-    float4 colour = float4(0.f, 0.f, 0.f, 1.f);
-    float4 textureColour = shaderTexture.Sample(diffuseSampler, input.tex);
+    float4 finalLightColor = float4(0.f, 0.f, 0.f, 1.f);
+    float4 finalSpecularColor;
+    float4 finalColor = float4(0.f, 0.f, 0.f, 1.f);
+    float4 textureColor = shaderTexture.Sample(diffuseSampler, input.tex);
 
 	// Calculate the projected texture coordinates.
     float2 pTexCoord = getProjectiveCoords(input.lightViewPos);
-	
+    float3 normal = normalize(input.normal);
     // Shadow test. Is or isn't in shadow
-    if (hasDepthData(pTexCoord))
-    {
-        // Has depth map data
-        if (!isInShadow(depthMapTexture, pTexCoord, input.lightViewPos, shadowMapBias))
-        {
-            // is NOT in shadow, therefore light
-            colour = calculateLighting(-direction, input.normal, diffuse);
-        }
-    }
     
-    colour = saturate(colour + ambient);
-    return saturate(colour) * textureColour;
+    float3 normalizedLightDir;
+    for (int i = 0; i < DIR_LIGHT_COUNT; i++)
+    {
+        normalizedLightDir = normalize(-lightDir[i].xyz);
+		
+        if (hasDepthData(pTexCoord))
+        {
+            // Has depth map data
+            if (!isInShadow(depthMapTexture, pTexCoord, input.lightViewPos, shadowMapBias))
+            {
+                // is NOT in shadow, therefore light
+                finalLightColor += ambientD[i] + calculateLightingDirectional(normalizedLightDir, normal, diffuseD[i]);
+            }
+        }
+        //finalSpecularColor += calculateSpecular(normalizedLightDir, normal, viewDir, specularD[i].rgb, specularD[i].a);
+    }
+    finalColor = textureColor * finalLightColor/*+ finalSpecularColor*/;
+    return finalColor;
 }
