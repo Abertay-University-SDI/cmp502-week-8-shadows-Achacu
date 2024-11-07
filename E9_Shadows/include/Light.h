@@ -9,8 +9,8 @@
 * \author Paul Robertson
 */
 
-#ifndef _LIGHT_H_
-#define _LIGHT_H_
+#ifndef DIRECTIONAL_LIGHT_H_
+#define DIRECTIONAL_LIGHT_H_
 
 #include <directxmath.h>
 

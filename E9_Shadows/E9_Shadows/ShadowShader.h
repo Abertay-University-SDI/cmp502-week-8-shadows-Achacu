@@ -23,12 +23,16 @@ private:
 		XMMATRIX lightProjection;
 	};
 
+	struct DirectionalLight
+	{
+		XMFLOAT4 lightDir;
+		XMFLOAT4 ambient;
+		XMFLOAT4 diffuse;
+		XMFLOAT4 specular; //(color.rgb, power)
+	};
 	struct DirLightBufferType
 	{
-		XMFLOAT4 ambient[DIR_LIGHT_COUNT];
-		XMFLOAT4 diffuse[DIR_LIGHT_COUNT];
-		XMFLOAT4 direction[DIR_LIGHT_COUNT];
-		XMFLOAT4 specular[DIR_LIGHT_COUNT]; //(color.rgb, power)
+		DirectionalLight dirLights[DIR_LIGHT_COUNT];
 	};
 
 public:

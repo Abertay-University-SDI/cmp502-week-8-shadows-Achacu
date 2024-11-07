@@ -7,12 +7,17 @@ Texture2D depthMapTexture : register(t1);
 SamplerState diffuseSampler  : register(s0);
 SamplerState shadowSampler : register(s1);
 
+struct DirectionalLight
+{
+    float4 lightDir;
+    float4 ambient;
+    float4 diffuse;
+    float4 specular; //(color.rgb, power)
+};
+
 cbuffer DirectionalLightBuffer : register(b0)
 {
-    float4 ambientD[DIR_LIGHT_COUNT];
-    float4 diffuseD[DIR_LIGHT_COUNT];
-    float4 lightDir[DIR_LIGHT_COUNT];
-    float4 specularD[DIR_LIGHT_COUNT]; //(color.rgb, power)
+    DirectionalLight dirLights[DIR_LIGHT_COUNT];
 };
 
 struct InputType
@@ -20,7 +25,7 @@ struct InputType
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-    float4 lightViewPos : TEXCOORD1;
+    float4 lightViewPos[DIR_LIGHT_COUNT] : TEXCOORD1;
 };
 
 // Calculate lighting intensity based on direction and normal. Combine with light colour.
@@ -74,22 +79,24 @@ float4 main(InputType input) : SV_TARGET
     float4 textureColor = shaderTexture.Sample(diffuseSampler, input.tex);
 
 	// Calculate the projected texture coordinates.
-    float2 pTexCoord = getProjectiveCoords(input.lightViewPos);
+    float2 pTexCoord = getProjectiveCoords(input.lightViewPos[0]);
     float3 normal = normalize(input.normal);
     // Shadow test. Is or isn't in shadow
     
     float3 normalizedLightDir;
+    DirectionalLight dLight;
     for (int i = 0; i < DIR_LIGHT_COUNT; i++)
     {
-        normalizedLightDir = normalize(-lightDir[i].xyz);
+        dLight = dirLights[i];
+        normalizedLightDir = normalize(-dLight.lightDir.xyz);
 		
         if (hasDepthData(pTexCoord))
         {
             // Has depth map data
-            if (!isInShadow(depthMapTexture, pTexCoord, input.lightViewPos, shadowMapBias))
+            if (!isInShadow(depthMapTexture, pTexCoord, input.lightViewPos[0], shadowMapBias))
             {
                 // is NOT in shadow, therefore light
-                finalLightColor += ambientD[i] + calculateLightingDirectional(normalizedLightDir, normal, diffuseD[i]);
+                finalLightColor += dLight.ambient + calculateLightingDirectional(normalizedLightDir, normal, dLight.diffuse);
             }
         }
         //finalSpecularColor += calculateSpecular(normalizedLightDir, normal, viewDir, specularD[i].rgb, specularD[i].a);

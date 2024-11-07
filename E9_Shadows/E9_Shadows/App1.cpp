@@ -1,6 +1,7 @@
 // Lab1.cpp
 // Lab 1 example, simple coloured triangle mesh
 #include "App1.h"
+#include "MyLight.h"
 
 App1::App1()
 {
@@ -226,7 +227,7 @@ void App1::finalPass()
 }
 
 
-
+MyLight myLight = MyLight();
 void App1::gui()
 {
 	// Force turn off unnecessary shader stages.
@@ -259,7 +260,7 @@ void App1::gui()
 
 	Light* dirLight;
 	int dirLightCount = dirLights.size();
-	for (int i = 0, j = pointLightCount; i < dirLightCount; i++, j++)
+	for (int i = 0, j = POINT_LIGHT_COUNT; i < dirLightCount; i++, j++)
 	{
 		dirLight = dirLights[i];
 		ImGui::Text("DirectionalLight %d", i);
@@ -293,6 +294,8 @@ void App1::gui()
 		ImGui::PopID();
 	}
 
+	if (ImGui::ColorEdit3("ambientL", myLight.guiInfo.ambient, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
+		myLight.UpdateLightWithGUIInfo();
 
 	// Render UI
 	ImGui::Render();

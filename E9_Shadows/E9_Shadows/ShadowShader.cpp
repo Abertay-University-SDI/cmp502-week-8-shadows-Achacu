@@ -128,10 +128,13 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	for (size_t i = 0; i < dirLightCount; i++)
 	{
 		dirLight = dirLights[i];
-		dirLightPtr->ambient[i] = dirLight->getAmbientColour();
-		dirLightPtr->diffuse[i] = dirLight->getDiffuseColour();
-		dirLightPtr->direction[i] = XMFLOAT4(dirLight->getDirection().x, dirLight->getDirection().y, dirLight->getDirection().z, 0.0f);
-		dirLightPtr->specular[i] = XMFLOAT4(dirLight->getSpecularColour().x, dirLight->getSpecularColour().y, dirLight->getSpecularColour().z, dirLight->getSpecularPower());
+		DirectionalLight lightInfo = DirectionalLight();
+		lightInfo.ambient = dirLight->getAmbientColour();
+		lightInfo.diffuse = dirLight->getDiffuseColour();
+		lightInfo.lightDir = XMFLOAT4(dirLight->getDirection().x, dirLight->getDirection().y, dirLight->getDirection().z, 0.0f);
+		lightInfo.specular = XMFLOAT4(dirLight->getSpecularColour().x, dirLight->getSpecularColour().y, dirLight->getSpecularColour().z, dirLight->getSpecularPower());
+
+		dirLightPtr->dirLights[i] = lightInfo ;
 	}
 	deviceContext->Unmap(dirLightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &dirLightBuffer);
