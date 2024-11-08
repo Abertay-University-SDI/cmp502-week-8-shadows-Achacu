@@ -32,6 +32,9 @@ float position[POINT_LIGHT_COUNT + DIR_LIGHT_COUNT][3] = { 0,10,0 };
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
+	
+	//DirectionalLight::DirectionalLightInfo* info = &direLight.info;
+
 	// Call super/parent init function (required!)
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
@@ -227,7 +230,7 @@ void App1::finalPass()
 }
 
 
-MyLight myLight = MyLight();
+DirectionalLight myLight = DirectionalLight();
 void App1::gui()
 {
 	// Force turn off unnecessary shader stages.
@@ -294,7 +297,11 @@ void App1::gui()
 		ImGui::PopID();
 	}
 
-	if (ImGui::ColorEdit3("ambientL", myLight.guiInfo.ambient, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
+	if (ImGui::ColorEdit3("ambientL", myLight.guiInfo.ambient, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+	ImGui::ColorEdit3("diffuseL", myLight.guiInfo.diffuse, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+	ImGui::ColorEdit3("specularColorL", myLight.guiInfo.specular, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+	ImGui::DragFloat("specularPowerL", &myLight.guiInfo.specular[3], 1, 1, 32) ||
+	ImGui::DragFloat3("DirectionLightL", myLight.guiInfo.direction, 0.1f, -100, 100))
 		myLight.UpdateLightWithGUIInfo();
 
 	// Render UI
