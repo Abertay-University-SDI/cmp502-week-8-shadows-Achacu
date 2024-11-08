@@ -61,18 +61,18 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	// This is your shadow map
 	shadowMap = new ShadowMap(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
 
-	Light* dirLight;
+	DirectionalLight* dirLight;
 	for (int i = 0, j = POINT_LIGHT_COUNT; i < DIR_LIGHT_COUNT; i++, j++)
 	{
-		dirLight = new Light();
+		dirLight = new DirectionalLight();
 		dirLights.push_back(dirLight);
 
-		dirLight->setPosition(position[i][0], position[i][1], position[i][2]);
-		dirLight->setDirection(direction[i][0], direction[i][1], direction[i][2]);
-		dirLight->setDiffuseColour(diffuseColor[j][0], diffuseColor[j][1], diffuseColor[j][2], diffuseColor[j][3]);
-		dirLight->setAmbientColour(ambientColor[j][0], ambientColor[j][1], ambientColor[j][2], ambientColor[j][3]);
-		dirLight->setSpecularColour(specular[j][0], specular[j][1], specular[j][2], 1.0f);
-		dirLight->setSpecularPower(specular[j][3]);
+		//dirLight->setPosition(position[i][0], position[i][1], position[i][2]);
+		//dirLight->setDirection(direction[i][0], direction[i][1], direction[i][2]);
+		//dirLight->setDiffuseColour(diffuseColor[j][0], diffuseColor[j][1], diffuseColor[j][2], diffuseColor[j][3]);
+		//dirLight->setAmbientColour(ambientColor[j][0], ambientColor[j][1], ambientColor[j][2], ambientColor[j][3]);
+		//dirLight->setSpecularColour(specular[j][0], specular[j][1], specular[j][2], 1.0f);
+		//dirLight->setSpecularPower(specular[j][3]);
 		dirLight->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
 	}
 
@@ -261,48 +261,63 @@ void App1::gui()
 	ImGui::SliderFloat3("RotationTeapot", teapotRot, -3.14, 3.14);
 	ImGui::SliderFloat3("ScaleTeapot", teapotScale, 0, 3);
 
-	Light* dirLight;
+	string ambientStr, diffuseStr, specColStr, specPowStr, dirStr, pivotStr, dstFromPivotStr;
 	int dirLightCount = dirLights.size();
+	DirectionalLight* dirLight;
 	for (int i = 0, j = POINT_LIGHT_COUNT; i < dirLightCount; i++, j++)
 	{
 		dirLight = dirLights[i];
-		ImGui::Text("DirectionalLight %d", i);
 
-		//ambient
-		ImGui::PushID(j);
-		if (ImGui::ColorEdit3("ambient", &ambientColor[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
-			dirLight->setAmbientColour(ambientColor[j][0], ambientColor[j][1], ambientColor[j][2], ambientColor[j][3]);
-		ImGui::PopID();
+		ambientStr = "AmbientD" + i;
+		diffuseStr = "DiffuseD" + i;
+		specColStr = "SpecColD" + i;
+		specPowStr = "SpecPowD" + i;
+		dirStr = "DirD" + i;
+		pivotStr = "PivotD" + i;
+		dstFromPivotStr = "DstFromPivotD" + i;
+		
+		if (ImGui::ColorEdit3(ambientStr.c_str(), dirLight->guiInfo.ambient, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+		ImGui::ColorEdit3(diffuseStr.c_str(), dirLight->guiInfo.diffuse, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+		ImGui::ColorEdit3(specColStr.c_str(), dirLight->guiInfo.specular, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+		ImGui::DragFloat(specPowStr.c_str(), &dirLight->guiInfo.specular[3], 1, 1, 32) ||
+		ImGui::DragFloat3(pivotStr.c_str(), dirLight->guiInfo.sceneCenter, 0.1, -100, 100) ||
+		ImGui::DragFloat(dstFromPivotStr.c_str(), &dirLight->guiInfo.lightDstFromCenter, 0.1, 0, 30) ||
+		ImGui::DragFloat3(dirStr.c_str(), dirLight->guiInfo.direction, 0.1, -1, 1))
+			dirLight->UpdateLightWithGUIInfo();
+		
+		//dirLight = dirLights[i];
+		//ImGui::Text("DirectionalLight %d", i);
 
-		//diffuse
-		ImGui::PushID(j);
-		if (ImGui::ColorEdit3("diffuse", &diffuseColor[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
-			dirLight->setDiffuseColour(diffuseColor[j][0], diffuseColor[j][1], diffuseColor[j][2], diffuseColor[j][3]);
-		ImGui::PopID();
+		////ambient
+		//ImGui::PushID(j);
+		//if (ImGui::ColorEdit3("ambient", &ambientColor[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
+		//	dirLight->setAmbientColour(ambientColor[j][0], ambientColor[j][1], ambientColor[j][2], ambientColor[j][3]);
+		//ImGui::PopID();
 
-		//specular
-		ImGui::PushID(j);
-		if (ImGui::ColorEdit3("specularColor", &specular[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
-			dirLight->setSpecularColour(specular[j][0], specular[j][1], specular[j][2], 1.0f);
-		ImGui::PopID();
-		ImGui::PushID(j); //ensures IDs are unique
-		if (ImGui::DragFloat("specularPower", &specular[j][3], 1, 1, 32))
-			dirLight->setSpecularPower(specular[j][3]);
-		ImGui::PopID();
+		////diffuse
+		//ImGui::PushID(j);
+		//if (ImGui::ColorEdit3("diffuse", &diffuseColor[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
+		//	dirLight->setDiffuseColour(diffuseColor[j][0], diffuseColor[j][1], diffuseColor[j][2], diffuseColor[j][3]);
+		//ImGui::PopID();
 
-		//direction
-		ImGui::PushID(i);
-		if (ImGui::DragFloat3("direction", &direction[i][0], 0.1, -1, 1))
-			dirLight->setDirection(direction[i][0], direction[i][1], direction[i][2]);
-		ImGui::PopID();
+		////specular
+		//ImGui::PushID(j);
+		//if (ImGui::ColorEdit3("specularColor", &specular[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
+		//	dirLight->setSpecularColour(specular[j][0], specular[j][1], specular[j][2], 1.0f);
+		//ImGui::PopID();
+		//ImGui::PushID(j); //ensures IDs are unique
+		//if (ImGui::DragFloat("specularPower", &specular[j][3], 1, 1, 32))
+		//	dirLight->setSpecularPower(specular[j][3]);
+		//ImGui::PopID();
+
+		////direction
+		//ImGui::PushID(i);
+		//if (ImGui::DragFloat3("direction", &direction[i][0], 0.1, -1, 1))
+		//	dirLight->setDirection(direction[i][0], direction[i][1], direction[i][2]);
+		//ImGui::PopID();
 	}
 
-	if (ImGui::ColorEdit3("ambientL", myLight.guiInfo.ambient, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
-	ImGui::ColorEdit3("diffuseL", myLight.guiInfo.diffuse, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
-	ImGui::ColorEdit3("specularColorL", myLight.guiInfo.specular, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
-	ImGui::DragFloat("specularPowerL", &myLight.guiInfo.specular[3], 1, 1, 32) ||
-	ImGui::DragFloat3("DirectionLightL", myLight.guiInfo.direction, 0.1f, -100, 100))
-		myLight.UpdateLightWithGUIInfo();
+	
 
 	// Render UI
 	ImGui::Render();

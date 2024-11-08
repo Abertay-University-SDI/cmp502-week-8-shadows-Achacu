@@ -87,11 +87,13 @@ public:
 
 	struct DirLightInfo : public LightInfo
 	{
-		XMFLOAT4 direction = XMFLOAT4(0, 0, 0, 0);
+		XMFLOAT4 direction = XMFLOAT4(0, -1, 0, 0);
 	};
 
 	struct ImGuiDirLightInfo : public ImGuiLightInfo {
 		float direction[4] = { 0,-1,0,0 };
+		float sceneCenter[3] = { 0,0,0 };
+		float lightDstFromCenter = 10;
 	};
 
 	virtual void UpdateLightWithGUIInfo() {
@@ -100,6 +102,7 @@ public:
 	void UpdateLightWithGUIInfo(DirLightInfo& info, ImGuiDirLightInfo& guiInfo) {
 		MyLight::UpdateLightWithGUIInfo(info, guiInfo);
 		info.direction = XMFLOAT4(guiInfo.direction[0], guiInfo.direction[1], guiInfo.direction[2], 0);
+		info.position = XMFLOAT4(guiInfo.sceneCenter[0] - guiInfo.direction[0] * guiInfo.lightDstFromCenter, guiInfo.sceneCenter[1] - guiInfo.direction[1] * guiInfo.lightDstFromCenter, guiInfo.sceneCenter[2] - guiInfo.direction[2] * guiInfo.lightDstFromCenter, 0);
 	}
 
 	ImGuiDirLightInfo guiInfo;

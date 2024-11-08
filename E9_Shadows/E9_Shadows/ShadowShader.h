@@ -4,6 +4,7 @@
 #define _SHADOWSHADER_H_
 
 #include "DXF.h"
+#include "MyLight.h"
 
 using namespace std;
 using namespace DirectX;
@@ -23,16 +24,16 @@ private:
 		XMMATRIX lightProjection;
 	};
 
-	struct DirectionalLight
-	{
-		XMFLOAT4 lightDir;
-		XMFLOAT4 ambient;
-		XMFLOAT4 diffuse;
-		XMFLOAT4 specular; //(color.rgb, power)
-	};
+	//struct DirectionalLight
+	//{
+	//	XMFLOAT4 lightDir;
+	//	XMFLOAT4 ambient;
+	//	XMFLOAT4 diffuse;
+	//	XMFLOAT4 specular; //(color.rgb, power)
+	//};
 	struct DirLightBufferType
 	{
-		DirectionalLight dirLights[DIR_LIGHT_COUNT];
+		DirectionalLight::DirLightInfo dirLights[DIR_LIGHT_COUNT];
 	};
 
 public:
@@ -40,7 +41,7 @@ public:
 	ShadowShader(ID3D11Device* device, HWND hwnd);
 	~ShadowShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* depthMap, std::vector<Light*> dirLights);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* depthMap, std::vector<DirectionalLight*> dirLights);
 private:
 	void initShader(const wchar_t* vs, const wchar_t* ps);
 

@@ -38,7 +38,7 @@ private:
 
 	ShadowMap* shadowMap;
 
-	std::vector<Light*> dirLights;
+	std::vector<DirectionalLight*> dirLights;
 	std::vector</*Point*/Light*> pointLights;
 
 };

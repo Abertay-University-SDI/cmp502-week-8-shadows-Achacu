@@ -94,7 +94,7 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 }
 
 
-void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView*depthMap, std::vector<Light*> dirLights)
+void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView*depthMap, std::vector<DirectionalLight*> dirLights)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -123,18 +123,17 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	deviceContext->Map(dirLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	DirLightBufferType* dirLightPtr;
 	dirLightPtr = (DirLightBufferType*)mappedResource.pData;
-	Light* dirLight;
+	DirectionalLight* dirLight;
 	int dirLightCount = dirLights.size();
 	for (size_t i = 0; i < dirLightCount; i++)
 	{
 		dirLight = dirLights[i];
-		DirectionalLight lightInfo = DirectionalLight();
-		lightInfo.ambient = dirLight->getAmbientColour();
-		lightInfo.diffuse = dirLight->getDiffuseColour();
-		lightInfo.lightDir = XMFLOAT4(dirLight->getDirection().x, dirLight->getDirection().y, dirLight->getDirection().z, 0.0f);
-		lightInfo.specular = XMFLOAT4(dirLight->getSpecularColour().x, dirLight->getSpecularColour().y, dirLight->getSpecularColour().z, dirLight->getSpecularPower());
-
-		dirLightPtr->dirLights[i] = lightInfo ;
+		//lightInfo.ambient = dirLight->getAmbientColour();
+		//lightInfo.diffuse = dirLight->getDiffuseColour();
+		//lightInfo.lightDir = XMFLOAT4(dirLight->getDirection().x, dirLight->getDirection().y, dirLight->getDirection().z, 0.0f);
+		//lightInfo.specular = XMFLOAT4(dirLight->getSpecularColour().x, dirLight->getSpecularColour().y, dirLight->getSpecularColour().z, dirLight->getSpecularPower());
+		
+		dirLightPtr->dirLights[i] = dirLight->info;
 	}
 	deviceContext->Unmap(dirLightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &dirLightBuffer);

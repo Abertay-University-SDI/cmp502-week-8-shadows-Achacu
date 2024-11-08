@@ -9,10 +9,11 @@ SamplerState shadowSampler : register(s1);
 
 struct DirectionalLight
 {
-    float4 lightDir;
     float4 ambient;
     float4 diffuse;
     float4 specular; //(color.rgb, power)
+    float4 position;
+    float4 lightDir;
 };
 
 cbuffer DirectionalLightBuffer : register(b0)
