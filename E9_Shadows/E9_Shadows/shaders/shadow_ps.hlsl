@@ -1,4 +1,4 @@
-#define DIR_LIGHT_COUNT 1
+#define DIR_LIGHT_COUNT 2
 
 
 Texture2D shaderTexture : register(t0);
@@ -80,25 +80,24 @@ float4 main(InputType input) : SV_TARGET
     float4 textureColor = shaderTexture.Sample(diffuseSampler, input.tex);
 
 	// Calculate the projected texture coordinates.
-    float2 pTexCoord = getProjectiveCoords(input.lightViewPos[0]);
     float3 normal = normalize(input.normal);
     // Shadow test. Is or isn't in shadow
     
     float3 normalizedLightDir;
+    float2 pTexCoord;
     DirectionalLight dLight;
     for (int i = 0; i < DIR_LIGHT_COUNT; i++)
     {
+        pTexCoord = getProjectiveCoords(input.lightViewPos[i]);
         dLight = dirLights[i];
         normalizedLightDir = normalize(-dLight.lightDir.xyz);
 		
         if (hasDepthData(pTexCoord))
         {
+            bool inShadow = isInShadow(depthMapTextures[i], pTexCoord, input.lightViewPos[i], shadowMapBias);
             // Has depth map data
-            if (!isInShadow(depthMapTextures[i], pTexCoord, input.lightViewPos[i], shadowMapBias))
-            {
-                // is NOT in shadow, therefore light
-                finalLightColor += dLight.ambient + calculateLightingDirectional(normalizedLightDir, normal, dLight.diffuse);
-            }
+            
+            finalLightColor += dLight.ambient + !inShadow * calculateLightingDirectional(normalizedLightDir, normal, dLight.diffuse);            
         }
         //finalSpecularColor += calculateSpecular(normalizedLightDir, normal, viewDir, specularD[i].rgb, specularD[i].a);
     }

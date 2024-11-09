@@ -1,4 +1,4 @@
-#define DIR_LIGHT_COUNT 1
+#define DIR_LIGHT_COUNT 2
 
 cbuffer MatrixBuffer : register(b0)
 {

@@ -20,7 +20,7 @@ public:
 
 protected:
 	bool render();
-	void depthPass();
+	void depthPass(DirectionalLight* dirLight);
 	void finalPass();
 	void gui();
 
@@ -35,8 +35,6 @@ private:
 	AModel* model;
 	ShadowShader* shadowShader;
 	DepthShader* depthShader;
-
-	ShadowMap* shadowMap;
 
 	std::vector<DirectionalLight*> dirLights;
 	std::vector</*Point*/Light*> pointLights;

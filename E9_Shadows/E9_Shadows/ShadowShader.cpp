@@ -123,7 +123,7 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	for (size_t i = 0; i < dirLightCount; i++)
 	{
 		dirLight = dirLights[i];
-		shadowMaps[i] = dirLight->shadowMapSRV;
+		shadowMaps[i] = dirLight->shadowMap->getDepthMapSRV();
 		//lightInfo.ambient = dirLight->getAmbientColour();
 		//lightInfo.diffuse = dirLight->getDiffuseColour();
 		//lightInfo.lightDir = XMFLOAT4(dirLight->getDirection().x, dirLight->getDirection().y, dirLight->getDirection().z, 0.0f);

@@ -46,6 +46,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth/2, screenHeight/2, -screenWidth/2.7, screenHeight/2.7);
 
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
+	textureMgr->loadTexture(L"wood", L"res/wood.png");
 
 	// initial shaders
 	textureShader = new TextureShader(renderer->getDevice(), hwnd);
@@ -59,7 +60,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	int sceneHeight = 100;
 
 	// This is your shadow map
-	shadowMap = new ShadowMap(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
 
 	DirectionalLight* dirLight;
 	for (int i = 0, j = POINT_LIGHT_COUNT; i < DIR_LIGHT_COUNT; i++, j++)
@@ -73,8 +73,15 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 		//dirLight->setAmbientColour(ambientColor[j][0], ambientColor[j][1], ambientColor[j][2], ambientColor[j][3]);
 		//dirLight->setSpecularColour(specular[j][0], specular[j][1], specular[j][2], 1.0f);
 		//dirLight->setSpecularPower(specular[j][3]);
+
+		dirLight->shadowMap = new ShadowMap(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
 		dirLight->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
 		dirLight->UpdateLightWithGUIInfo(); //PLACEHOLDER FOR FILE READING INITIALIZATION
+
+		//DEBUGGING
+		dirLight->info.diffuse = XMFLOAT4(0.9*(i == 0), 0.7*(i == 1),0, 1);
+		dirLight->info.direction = XMFLOAT4((i == 0)? 1 : -1, -1, 0, 1);
+		//
 	}
 
 	// Configure directional light
@@ -121,22 +128,24 @@ bool App1::render()
 {
 
 	// Perform depth pass
-	depthPass();
+	for (int i = 0; i < DIR_LIGHT_COUNT; i++) {
+		depthPass(dirLights[i]);
+	}
 	// Render scene
 	finalPass();
 
 	return true;
 }
 
-void App1::depthPass()
+void App1::depthPass(DirectionalLight* dirLight)
 {
 	// Set the render target to be the render to texture.
-	shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
+	dirLight->shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
 
 	// get the world, view, and projection matrices from the camera and d3d objects.
-	dirLights[0]->generateViewMatrix();
-	XMMATRIX lightViewMatrix = dirLights[0]->getViewMatrix();
-	XMMATRIX lightProjectionMatrix = dirLights[0]->getOrthoMatrix();
+	dirLight->generateViewMatrix();
+	XMMATRIX lightViewMatrix = dirLight->getViewMatrix();
+	XMMATRIX lightProjectionMatrix = dirLight->getOrthoMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
 	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
@@ -173,8 +182,6 @@ void App1::depthPass()
 	// Set back buffer as render target and reset view port.
 	renderer->setBackBufferRenderTarget();
 	renderer->resetViewport();
-
-	dirLights[0]->shadowMapSRV = shadowMap->getDepthMapSRV();
 }
 
 void App1::finalPass()
@@ -193,7 +200,7 @@ void App1::finalPass()
 	// Render floor
 	mesh->sendData(renderer->getDeviceContext());
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, 
-		textureMgr->getTexture(L"brick"), dirLights);
+		textureMgr->getTexture(L"wood"), dirLights);
 	shadowShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	// Render model
@@ -218,13 +225,13 @@ void App1::finalPass()
 	//Render light debug sphere
 	worldMatrix = XMMatrixTranslation(light->getPosition().x, light->getPosition().y, light->getPosition().z);
 	sphere->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), dirLights);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), XMMatrixScaling(0.1,0.1,0.1)*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), dirLights);
 	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 
 	renderer->setZBuffer(false);
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), dirLights[0]->shadowMapSRV);
+	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), dirLights[0]->shadowMap->getDepthMapSRV());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -240,6 +247,8 @@ void App1::gui()
 	renderer->getDeviceContext()->GSSetShader(NULL, NULL, 0);
 	renderer->getDeviceContext()->HSSetShader(NULL, NULL, 0);
 	renderer->getDeviceContext()->DSSetShader(NULL, NULL, 0);
+
+	ImGui::SetWindowSize(ImVec2::ImVec2(300, 600));
 
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
@@ -271,14 +280,14 @@ void App1::gui()
 	{
 		dirLight = dirLights[i];
 
-		idStr = "Light" + i;
-		ambientStr = "AmbientD" + i;
-		diffuseStr = "DiffuseD" + i;
-		specColStr = "SpecColD" + i;
-		specPowStr = "SpecPowD" + i;
-		dirStr = "DirD" + i;
-		pivotStr = "PivotD" + i;
-		dstFromPivotStr = "DstFromPivotD" + i;
+		idStr = "Light" + to_string(i);
+		ambientStr = "AmbientD" + to_string(i);
+		diffuseStr = "DiffuseD" + to_string(i);
+		specColStr = "SpecColD" + to_string(i);
+		specPowStr = "SpecPowD" + to_string(i);
+		dirStr = "DirD" + to_string(i);
+		pivotStr = "PivotD" + to_string(i);
+		dstFromPivotStr = "DstFromPivotD" + to_string(i);
 		
 		if (ImGui::CollapsingHeader(idStr.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
 		{

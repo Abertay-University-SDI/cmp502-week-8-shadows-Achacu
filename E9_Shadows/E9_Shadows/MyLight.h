@@ -101,5 +101,5 @@ public:
 
 	ImGuiDirLightInfo guiInfo;
 	DirLightInfo info;
-	ID3D11ShaderResourceView* shadowMapSRV;
+	ShadowMap* shadowMap;
 };

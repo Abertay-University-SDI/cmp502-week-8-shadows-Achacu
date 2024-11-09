@@ -10,7 +10,7 @@ using namespace std;
 using namespace DirectX;
 
 #define POINT_LIGHT_COUNT 0
-#define DIR_LIGHT_COUNT 1
+#define DIR_LIGHT_COUNT 2
 
 class ShadowShader : public BaseShader
 {
