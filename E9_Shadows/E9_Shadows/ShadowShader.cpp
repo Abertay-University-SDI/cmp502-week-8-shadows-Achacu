@@ -94,7 +94,7 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 }
 
 
-void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView*depthMap, std::vector<DirectionalLight*> dirLights)
+void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, std::vector<DirectionalLight*> dirLights)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -104,19 +104,9 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	XMMATRIX tworld = XMMatrixTranspose(worldMatrix);
 	XMMATRIX tview = XMMatrixTranspose(viewMatrix);
 	XMMATRIX tproj = XMMatrixTranspose(projectionMatrix);
-	XMMATRIX tLightViewMatrix = XMMatrixTranspose(dirLights[0]->getViewMatrix());
-	XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(dirLights[0]->getOrthoMatrix());
+	//XMMATRIX tLightViewMatrix = XMMatrixTranspose(dirLights[0]->getViewMatrix());
+	//XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(dirLights[0]->getOrthoMatrix());
 	
-	// Lock the constant buffer so it can be written to.
-	deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	dataPtr = (MatrixBufferType*)mappedResource.pData;
-	dataPtr->world = tworld;// worldMatrix;
-	dataPtr->view = tview;
-	dataPtr->projection = tproj;
-	dataPtr->lightView = tLightViewMatrix;
-	dataPtr->lightProjection = tLightProjectionMatrix;
-	deviceContext->Unmap(matrixBuffer, 0);
-	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
 	//Additional
 	// Send light data to pixel shader
@@ -124,23 +114,43 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	DirLightBufferType* dirLightPtr;
 	dirLightPtr = (DirLightBufferType*)mappedResource.pData;
 	DirectionalLight* dirLight;
+
+	ID3D11ShaderResourceView* shadowMaps[DIR_LIGHT_COUNT] = {};
+	XMMATRIX lightViews[DIR_LIGHT_COUNT] = {};
+	XMMATRIX lightProjections[DIR_LIGHT_COUNT] = {};
+
 	int dirLightCount = dirLights.size();
 	for (size_t i = 0; i < dirLightCount; i++)
 	{
 		dirLight = dirLights[i];
+		shadowMaps[i] = dirLight->shadowMapSRV;
 		//lightInfo.ambient = dirLight->getAmbientColour();
 		//lightInfo.diffuse = dirLight->getDiffuseColour();
 		//lightInfo.lightDir = XMFLOAT4(dirLight->getDirection().x, dirLight->getDirection().y, dirLight->getDirection().z, 0.0f);
 		//lightInfo.specular = XMFLOAT4(dirLight->getSpecularColour().x, dirLight->getSpecularColour().y, dirLight->getSpecularColour().z, dirLight->getSpecularPower());
-		
+		lightViews[i] = XMMatrixTranspose(dirLight->getViewMatrix());
+		lightProjections[i] = XMMatrixTranspose(dirLight->getProjectionMatrix());
 		dirLightPtr->dirLights[i] = dirLight->info;
 	}
 	deviceContext->Unmap(dirLightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &dirLightBuffer);
 
+	// Lock the constant buffer so it can be written to.
+	deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	dataPtr = (MatrixBufferType*)mappedResource.pData;
+	dataPtr->world = tworld;// worldMatrix;
+	dataPtr->view = tview;
+	dataPtr->projection = tproj;
+	memcpy(dataPtr->lightViews, lightViews, sizeof(XMMATRIX) * DIR_LIGHT_COUNT);
+	memcpy(dataPtr->lightProjections, lightProjections, sizeof(XMMATRIX) * DIR_LIGHT_COUNT);
+	//dataPtr->lightViews = lightViews;
+	//dataPtr->lightProjections = lightProjections;
+	deviceContext->Unmap(matrixBuffer, 0);
+	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
+
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
-	deviceContext->PSSetShaderResources(1, 1, &depthMap);
+	deviceContext->PSSetShaderResources(1, DIR_LIGHT_COUNT, shadowMaps); //i+1 since 0 is reserved for texture
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
 }

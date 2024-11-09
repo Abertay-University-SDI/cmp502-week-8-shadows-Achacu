@@ -20,11 +20,11 @@ void DirectionalLight::generateViewMatrix()
 	up = XMVector3Cross(right, dir);
 	// Create the view matrix from the three vectors.
 	XMVECTOR position = XMLoadFloat3(&XMFLOAT3(info.position.x, info.position.y, info.position.z));
-	matrixInfo.viewMatrix = XMMatrixLookAtLH(position, position + dir, up);
+	viewMatrix = XMMatrixLookAtLH(position, position + dir, up);
 }
 
 // Create a projection matrix for the (point) light source. Used in shadow mapping.
-void MyLight::generateProjectionMatrix(float screenNear, float screenFar)
+void MyLight::generatePerspectiveMatrix(float screenNear, float screenFar)
 {
 	float fieldOfView, screenAspect;
 
@@ -33,15 +33,15 @@ void MyLight::generateProjectionMatrix(float screenNear, float screenFar)
 	screenAspect = 1.0f;
 
 	// Create the projection matrix for the light.
-	projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenFar);
-	matrixInfo.projectionMatrix = projectionMatrix;
+	perspectiveMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenFar);
+	projectionMatrix = perspectiveMatrix;
 }
 
 // Create orthomatrix for (directional) light source. Used in shadow mapping.
-void MyLight::generateOrthoMatrix(float screenWidth, float screenHeight, float near, float far)
+void MyLight::generateOrthoMatrix(float screenWidth, float screenHeight, float nearD, float farD)
 {
-	orthoMatrix = XMMatrixOrthographicLH(screenWidth, screenHeight, near, far);
-	matrixInfo.projectionMatrix = orthoMatrix;
+	orthoMatrix = XMMatrixOrthographicLH(screenWidth, screenHeight, nearD, farD);
+	projectionMatrix = orthoMatrix;
 }
 
 //void MyLight::setAmbientColour(float red, float green, float blue, float alpha)
@@ -109,14 +109,17 @@ void MyLight::generateOrthoMatrix(float screenWidth, float screenHeight, float n
 
 XMMATRIX MyLight::getViewMatrix()
 {
-	return matrixInfo.viewMatrix;
+	return viewMatrix;
 }
 
 XMMATRIX MyLight::getProjectionMatrix()
 {
 	return projectionMatrix;
 }
-
+XMMATRIX MyLight::getPerspectiveMatrix()
+{
+	return perspectiveMatrix;
+}
 XMMATRIX MyLight::getOrthoMatrix()
 {
 	return orthoMatrix;

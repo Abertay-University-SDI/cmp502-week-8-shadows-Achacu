@@ -20,8 +20,8 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX projection;
-		XMMATRIX lightView;
-		XMMATRIX lightProjection;
+		XMMATRIX lightViews[DIR_LIGHT_COUNT];
+		XMMATRIX lightProjections[DIR_LIGHT_COUNT];
 	};
 
 	//struct DirectionalLight
@@ -41,7 +41,7 @@ public:
 	ShadowShader(ID3D11Device* device, HWND hwnd);
 	~ShadowShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* depthMap, std::vector<DirectionalLight*> dirLights);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, std::vector<DirectionalLight*> dirLights);
 private:
 	void initShader(const wchar_t* vs, const wchar_t* ps);
 

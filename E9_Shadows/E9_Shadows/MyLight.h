@@ -1,6 +1,7 @@
 #pragma once
 
 #include <directxmath.h>
+#include <DXF.h>
 using namespace DirectX;
 
 class MyLight
@@ -9,30 +10,21 @@ public:
 	struct LightInfo {
 		XMFLOAT4 ambient = XMFLOAT4(0,0,0,0);
 		XMFLOAT4 diffuse = XMFLOAT4(0, 0, 0, 0);
-		//XMFLOAT3 direction;
 		XMFLOAT4 specular = XMFLOAT4(0, 0, 0, 0);
 		XMFLOAT4 position = XMFLOAT4(0, 0, 0, 0);
 	};
 	struct ImGuiLightInfo {
 		float ambient[4] = { 0,0,0,0 };
-		float diffuse[4] = { 1,0,0,0 };
-		float specular[4] = { 2,0,0,0 };
-		float position[4] = { 3,0,0,0 };
+		float diffuse[4] = { 1,0,0,1 };
+		float specular[4] = { 0,0,0,0 };
+		float position[4] = { 0,3,0,0 };
 	};
 
 	//virtual void generateViewMatrix();		///< Generates and upto date view matrix, based on current rotation
-	void generateProjectionMatrix(float screenNear, float screenFar);			///< Generate project matrix based on current rotation and provided near & far plane
-	void generateOrthoMatrix(float screenWidth, float screenHeight, float near, float far);		///< Generates orthographic matrix based on supplied screen dimensions and near & far plane.
-
-	struct MatrixInfo {
-		XMMATRIX viewMatrix;
-		XMMATRIX projectionMatrix;
-		//XMMATRIX orthoMatrix;
-	};
-
+	void generatePerspectiveMatrix(float screenNear, float screenFar);			///< Generate project matrix based on current rotation and provided near & far plane
+	void generateOrthoMatrix(float screenWidth, float screenHeight, float nearD, float farD);		///< Generates orthographic matrix based on supplied screen dimensions and near & far plane.
 
 	LightInfo info;
-	MatrixInfo matrixInfo;
 	ImGuiLightInfo guiInfo;
 	virtual void UpdateLightWithGUIInfo() {
 		UpdateLightWithGUIInfo(info, guiInfo);
@@ -61,8 +53,8 @@ public:
 	//XMFLOAT3 getPosition();				///< Get light position, returns float3
 	virtual XMMATRIX getViewMatrix();			///< Get light view matrix for shadow mapping, returns XMMATRIX
 	XMMATRIX getProjectionMatrix();		///< Get light projection matrix for shadow mapping, returns XMMATRIX
+	XMMATRIX getPerspectiveMatrix();
 	XMMATRIX getOrthoMatrix();			///< Get light orthographic matrix for shadow mapping, returns XMMATRIX
-
 
 protected:
 	//XMFLOAT4 ambientColour;
@@ -72,7 +64,9 @@ protected:
 	//float specularPower;
 	//XMVECTOR position;
 	//XMMATRIX viewMatrix;
+	XMMATRIX viewMatrix;
 	XMMATRIX projectionMatrix;
+	XMMATRIX perspectiveMatrix;
 	XMMATRIX orthoMatrix;
 };
 
@@ -107,4 +101,5 @@ public:
 
 	ImGuiDirLightInfo guiInfo;
 	DirLightInfo info;
+	ID3D11ShaderResourceView* shadowMapSRV;
 };
