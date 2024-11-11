@@ -94,7 +94,7 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 }
 
 
-void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, std::vector<DirectionalLight*> dirLights)
+void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, LightManager* lightManager)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -119,15 +119,12 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	XMMATRIX lightViews[DIR_LIGHT_COUNT] = {};
 	XMMATRIX lightProjections[DIR_LIGHT_COUNT] = {};
 
-	int dirLightCount = dirLights.size();
-	for (size_t i = 0; i < dirLightCount; i++)
+	int i = 0;
+	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++, i++)
 	{
-		dirLight = dirLights[i];
+		DirectionalLight* dirLight = &(it->second);
+	
 		shadowMaps[i] = dirLight->shadowMap->getDepthMapSRV();
-		//lightInfo.ambient = dirLight->getAmbientColour();
-		//lightInfo.diffuse = dirLight->getDiffuseColour();
-		//lightInfo.lightDir = XMFLOAT4(dirLight->getDirection().x, dirLight->getDirection().y, dirLight->getDirection().z, 0.0f);
-		//lightInfo.specular = XMFLOAT4(dirLight->getSpecularColour().x, dirLight->getSpecularColour().y, dirLight->getSpecularColour().z, dirLight->getSpecularPower());
 		lightViews[i] = XMMatrixTranspose(dirLight->getViewMatrix());
 		lightProjections[i] = XMMatrixTranspose(dirLight->getProjectionMatrix());
 		dirLightPtr->dirLights[i] = dirLight->info;

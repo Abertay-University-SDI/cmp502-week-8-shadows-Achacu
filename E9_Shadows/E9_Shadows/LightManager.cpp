@@ -28,6 +28,7 @@ void LightManager::AddDirectionalLight(string id, float ambient[4], float diffus
 	memcpy(light.guiInfo.pivot, pivot, sizeof(float[4]));
 	memcpy(light.guiInfo.direction, direction, sizeof(float[4]));
 
+	light.UpdateLightWithGUIInfo();
 	dirLights[id] = light;
 }
 void StrToFloat4(string s, float a[4]) {

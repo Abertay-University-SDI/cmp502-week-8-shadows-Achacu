@@ -1,4 +1,4 @@
-#define DIR_LIGHT_COUNT 2
+#define DIR_LIGHT_COUNT 3
 
 
 Texture2D shaderTexture : register(t0);

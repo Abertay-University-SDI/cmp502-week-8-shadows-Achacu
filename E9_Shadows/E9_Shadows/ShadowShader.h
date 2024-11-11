@@ -5,12 +5,13 @@
 
 #include "DXF.h"
 #include "MyLight.h"
+#include "LightManager.h"
 
 using namespace std;
 using namespace DirectX;
 
 #define POINT_LIGHT_COUNT 0
-#define DIR_LIGHT_COUNT 2
+#define DIR_LIGHT_COUNT 3
 
 class ShadowShader : public BaseShader
 {
@@ -41,9 +42,10 @@ public:
 	ShadowShader(ID3D11Device* device, HWND hwnd);
 	~ShadowShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, std::vector<DirectionalLight*> dirLights);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, LightManager* lightManager);
 private:
 	void initShader(const wchar_t* vs, const wchar_t* ps);
+
 
 
 private:

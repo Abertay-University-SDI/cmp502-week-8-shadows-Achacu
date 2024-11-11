@@ -46,6 +46,10 @@ void MyLight::generateOrthoMatrix(float screenWidth, float screenHeight, float n
 	orthoMatrix = XMMatrixOrthographicLH(screenWidth, screenHeight, nearD, farD);
 	projectionMatrix = orthoMatrix;
 }
+XMMATRIX DirectionalLight::GetWorldMatrix()
+{
+	return XMMatrixTranslation(info.position.x, info.position.y, info.position.z);
+}
 
 string MyLight::ToString() {
 	return ToString(guiInfo);

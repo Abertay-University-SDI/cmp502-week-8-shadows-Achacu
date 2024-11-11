@@ -59,40 +59,24 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	int sceneWidth = 100;
 	int sceneHeight = 100;
 
-	// This is your shadow map
+	//Reads light info from file and creates lights
+	lightManager = new LightManager();
+	lightManager->ReadLightDataFromFile("lightInfo.txt");
 
+	//Initialize shadow map and projection matrix
 	DirectionalLight* dirLight;
-	for (int i = 0, j = POINT_LIGHT_COUNT; i < DIR_LIGHT_COUNT; i++, j++)
+	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
 	{
-		dirLight = new DirectionalLight();
-		dirLights.push_back(dirLight);
+		string id = it->first;
+		dirLight = &(it->second);	
 
 		dirLight->shadowMap = new ShadowMap(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
 		dirLight->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
-		dirLight->UpdateLightWithGUIInfo(); //PLACEHOLDER FOR FILE READING INITIALIZATION
-
-		//DEBUGGING
-		dirLight->info.diffuse = XMFLOAT4(0.9*(i == 0), 0.7*(i == 1),0, 1);
-		dirLight->info.direction = XMFLOAT4((i == 0)? 1 : -1, -1, 0, 1);
-		//
-		dirLight->guiInfo.ambient[0] = 0.25;
-		string s = dirLight->ToString();
 	}
-	lightManager = new LightManager();
-	lightManager->ReadLightDataFromFile("lightInfo.txt");
 
 	//lightManager->AddDirectionalLight("light1", new float[4] {0, 0, 0, 1}, new float[4] {1, 1, 0, 1}, new float[4] {0, 0, 0, 0},new float[4] {2, 5, 5, 10}, new float[4] {-0.7, -0.7, 0, 0});
 	//lightManager->AddDirectionalLight("light2", new float[4] {0, 0.234, 0, 1}, new float[4] {1, 1, 1, 1}, new float[4] {0, 0, 1, 0.2},new float[4] {2, 3, 4, 20}, new float[4] {-0.7, 0.7, 0.7, 0});
 	//string s = lightManager->GetDirectionalLight("light1")->ToString();
-
-	// Configure directional light
-	light = new Light();
-	light->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
-	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
-	light->setDirection(lightDir[0], lightDir[1], lightDir[2]);
-	light->setPosition(lightPos[0], lightPos[1], lightPos[2]); //position and direction need to "match" since we are calculating the ortho matrix from the position
-	light->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
-
 }
 
 App1::~App1()
@@ -129,8 +113,9 @@ bool App1::render()
 {
 
 	// Perform depth pass
-	for (int i = 0; i < DIR_LIGHT_COUNT; i++) {
-		depthPass(dirLights[i]);
+	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++) 
+	{
+		depthPass(&(it->second));
 	}
 	// Render scene
 	finalPass();
@@ -167,12 +152,6 @@ void App1::depthPass(DirectionalLight* dirLight)
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
-	//Render light debug sphere
-	worldMatrix = XMMatrixTranslation(light->getPosition().x, light->getPosition().y, light->getPosition().z);
-	sphere->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
-	depthShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
-
 	worldMatrix = renderer->getWorldMatrix();
 	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
 	// Render model
@@ -201,40 +180,44 @@ void App1::finalPass()
 	// Render floor
 	mesh->sendData(renderer->getDeviceContext());
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, 
-		textureMgr->getTexture(L"wood"), dirLights);
+		textureMgr->getTexture(L"wood"), lightManager);
 	shadowShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	// Render model
 	worldMatrix = renderer->getWorldMatrix();
 	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
 	model->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), dirLights);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), lightManager);
 	shadowShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 	//Render cube
 	worldMatrix = XMMatrixTranslation(cubePos[0], cubePos[1], cubePos[2]);
 	cube->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), dirLights);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), lightManager);
 	shadowShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
 	worldMatrix = XMMatrixTranslation(spherePos[0], spherePos[1], spherePos[2]);
 	sphere->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), dirLights);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), lightManager);
 	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
-	//Render light debug sphere
-	worldMatrix = XMMatrixTranslation(light->getPosition().x, light->getPosition().y, light->getPosition().z);
-	sphere->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), XMMatrixScaling(0.1,0.1,0.1)*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), dirLights);
-	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
+	cube->sendData(renderer->getDeviceContext());
+	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
+	{
+		worldMatrix = (it->second).GetWorldMatrix();
+		textureShader->setShaderParameters(renderer->getDeviceContext(), XMMatrixScaling(0.1,0.1,0.1)*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
+	}
+	////Render light debug sphere
+	//worldMatrix = XMMatrixTranslation(light->getPosition().x, light->getPosition().y, light->getPosition().z);
 
 
-	renderer->setZBuffer(false);
-	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), dirLights[0]->shadowMap->getDepthMapSRV());
-	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
-	renderer->setZBuffer(true);
+	//renderer->setZBuffer(false);
+	//orthoMesh->sendData(renderer->getDeviceContext());
+	//textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), dirLights[0]->shadowMap->getDepthMapSRV());
+	//textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	//renderer->setZBuffer(true);
 
 	gui();
 	renderer->endScene();
@@ -255,16 +238,6 @@ void App1::gui()
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 
-	ImGui::Text("Light");
-	ImGui::DragFloat("LightDst2C", &lightDstFromCenter, 0.1, 0, 100);
-	ImGui::DragFloat3("SceneCenter", sceneCenter, 0.1f, -100, 100);
-	if(ImGui::DragFloat3("PositionLight", lightPos, 0.1f, -100, 100))
-		light->setPosition(lightPos[0], lightPos[1], lightPos[2]); //position and direction need to "match" since we are calculating the ortho matrix from the position
-	if (ImGui::SliderFloat3("DirLight", lightDir, -1, 1))
-		light->setDirection(lightDir[0], lightDir[1], lightDir[2]);
-	//position correction to match the light direction
-	light->setPosition(sceneCenter[0] - lightDir[0] * lightDstFromCenter, sceneCenter[1] - lightDir[1]* lightDstFromCenter, sceneCenter[2] - lightDir[2]* lightDstFromCenter);
-
 	ImGui::Text("Cube");
 	ImGui::DragFloat3("PositionCube", cubePos, 0.1f, -50, 50);
 	ImGui::Text("Sphere");
@@ -275,7 +248,6 @@ void App1::gui()
 	ImGui::SliderFloat3("ScaleTeapot", teapotScale, 0, 3);
 
 	string ambientStr, diffuseStr, specColStr, specPowStr, dirStr, pivotStr, dstFromPivotStr;
-	int dirLightCount = dirLights.size();
 	DirectionalLight* dirLight;
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
 	{

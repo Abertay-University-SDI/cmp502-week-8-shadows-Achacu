@@ -32,13 +32,11 @@ private:
 	SphereMesh* sphere;
 	OrthoMesh* orthoMesh;
 
-	Light* light;
 	AModel* model;
 	ShadowShader* shadowShader;
 	DepthShader* depthShader;
 
 	LightManager* lightManager;
-	std::vector<DirectionalLight*> dirLights;
 	std::vector</*Point*/Light*> pointLights;
 
 };

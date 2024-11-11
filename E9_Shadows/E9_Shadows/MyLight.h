@@ -79,6 +79,8 @@ public:
 	}
 	void generateViewMatrix();		///< Generates and upto date view matrix, based on current rotation
 
+	XMMATRIX GetWorldMatrix();
+
 	string ToString();
 
 	struct DirLightInfo : public LightInfo
