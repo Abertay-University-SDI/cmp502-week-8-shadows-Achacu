@@ -10,10 +10,10 @@ DirectionalLight* LightManager::GetDirectionalLight(string id)
 {
 	return &dirLights.at(id);
 }
-std::map<string, DirectionalLight>::iterator LightManager::GetBegin() {
+std::map<string, DirectionalLight>::iterator LightManager::GetDirLightsBegin() {
 	return dirLights.begin();
 }
-std::map<string, DirectionalLight>::iterator LightManager::GetEnd() {
+std::map<string, DirectionalLight>::iterator LightManager::GetDirLightsEnd() {
 	return dirLights.end();
 }
 void LightManager::FillLightInfo(DirectionalLight* light, float ambient[4], float diffuse[4], float specular[4]) {

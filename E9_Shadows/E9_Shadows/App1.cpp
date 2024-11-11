@@ -67,13 +67,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 		dirLight = new DirectionalLight();
 		dirLights.push_back(dirLight);
 
-		//dirLight->setPosition(position[i][0], position[i][1], position[i][2]);
-		//dirLight->setDirection(direction[i][0], direction[i][1], direction[i][2]);
-		//dirLight->setDiffuseColour(diffuseColor[j][0], diffuseColor[j][1], diffuseColor[j][2], diffuseColor[j][3]);
-		//dirLight->setAmbientColour(ambientColor[j][0], ambientColor[j][1], ambientColor[j][2], ambientColor[j][3]);
-		//dirLight->setSpecularColour(specular[j][0], specular[j][1], specular[j][2], 1.0f);
-		//dirLight->setSpecularPower(specular[j][3]);
-
 		dirLight->shadowMap = new ShadowMap(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
 		dirLight->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
 		dirLight->UpdateLightWithGUIInfo(); //PLACEHOLDER FOR FILE READING INITIALIZATION
@@ -86,12 +79,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 		string s = dirLight->ToString();
 	}
 	lightManager = new LightManager();
-
 	lightManager->ReadLightDataFromFile("lightInfo.txt");
+
 	//lightManager->AddDirectionalLight("light1", new float[4] {0, 0, 0, 1}, new float[4] {1, 1, 0, 1}, new float[4] {0, 0, 0, 0},new float[4] {2, 5, 5, 10}, new float[4] {-0.7, -0.7, 0, 0});
 	//lightManager->AddDirectionalLight("light2", new float[4] {0, 0.234, 0, 1}, new float[4] {1, 1, 1, 1}, new float[4] {0, 0, 1, 0.2},new float[4] {2, 3, 4, 20}, new float[4] {-0.7, 0.7, 0.7, 0});
 	//string s = lightManager->GetDirectionalLight("light1")->ToString();
-	lightManager->WriteLightDataToFile("lightInfo.txt");
 
 	// Configure directional light
 	light = new Light();
@@ -282,23 +274,23 @@ void App1::gui()
 	ImGui::SliderFloat3("RotationTeapot", teapotRot, -3.14, 3.14);
 	ImGui::SliderFloat3("ScaleTeapot", teapotScale, 0, 3);
 
-	string idStr, ambientStr, diffuseStr, specColStr, specPowStr, dirStr, pivotStr, dstFromPivotStr;
+	string ambientStr, diffuseStr, specColStr, specPowStr, dirStr, pivotStr, dstFromPivotStr;
 	int dirLightCount = dirLights.size();
 	DirectionalLight* dirLight;
-	for (int i = 0, j = POINT_LIGHT_COUNT; i < dirLightCount; i++, j++)
+	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
 	{
-		dirLight = dirLights[i];
+		string id = it->first;
+		dirLight = &(it->second);		
 
-		idStr = "Light" + to_string(i);
-		ambientStr = "AmbientD" + to_string(i);
-		diffuseStr = "DiffuseD" + to_string(i);
-		specColStr = "SpecColD" + to_string(i);
-		specPowStr = "SpecPowD" + to_string(i);
-		dirStr = "DirD" + to_string(i);
-		pivotStr = "PivotD" + to_string(i);
-		dstFromPivotStr = "DstFromPivotD" + to_string(i);
+		ambientStr = "AmbientD" + id;
+		diffuseStr = "DiffuseD" + id;
+		specColStr = "SpecColD" + id;
+		specPowStr = "SpecPowD" + id;
+		dirStr = "DirD" + id;
+		pivotStr = "PivotD" + id;
+		dstFromPivotStr = "DstFromPivotD" + id;
 		
-		if (ImGui::CollapsingHeader(idStr.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
+		if (ImGui::CollapsingHeader(id.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
 		{
 
 			if (ImGui::ColorEdit3(ambientStr.c_str(), dirLight->guiInfo.ambient, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
@@ -310,6 +302,8 @@ void App1::gui()
 				ImGui::DragFloat3(dirStr.c_str(), dirLight->guiInfo.direction, 0.1, -1, 1))
 				dirLight->UpdateLightWithGUIInfo();
 		}
+
+		
 		//dirLight = dirLights[i];
 		//ImGui::Text("DirectionalLight %d", i);
 
@@ -341,7 +335,9 @@ void App1::gui()
 		//	dirLight->setDirection(direction[i][0], direction[i][1], direction[i][2]);
 		//ImGui::PopID();
 	}
-
+	if (ImGui::Button("Save light info")) {
+		lightManager->WriteLightDataToFile("lightInfo.txt");
+	}
 	
 
 	// Render UI

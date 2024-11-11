@@ -12,8 +12,8 @@ public:
 
 	DirectionalLight* GetDirectionalLight(string id);
 
-	std::map<string, DirectionalLight>::iterator GetBegin();
-	std::map<string, DirectionalLight>::iterator GetEnd();
+	std::map<string, DirectionalLight>::iterator GetDirLightsBegin();
+	std::map<string, DirectionalLight>::iterator GetDirLightsEnd();
 
 	void FillLightInfo(DirectionalLight* light, float ambient[4], float diffuse[4], float specular[4]);
 	void AddDirectionalLight(string id, float ambient[4], float diffuse[4], float specular[4], float pivot[4], float direction[4]);
