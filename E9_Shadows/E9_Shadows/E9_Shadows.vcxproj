@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClCompile Include="App1.cpp" />
     <ClCompile Include="DepthShader.cpp" />
+    <ClCompile Include="LightManager.cpp" />
     <ClCompile Include="MyLight.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="ShadowShader.cpp" />
@@ -173,6 +174,7 @@
   <ItemGroup>
     <ClInclude Include="App1.h" />
     <ClInclude Include="DepthShader.h" />
+    <ClInclude Include="LightManager.h" />
     <ClInclude Include="MyLight.h" />
     <ClInclude Include="ShadowShader.h" />
     <ClInclude Include="TextureShader.h" />
@@ -213,6 +215,9 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="lightInfo.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

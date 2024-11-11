@@ -1,4 +1,7 @@
 #include "MyLight.h"
+#include <sstream>
+#include <iomanip>
+
 
 //create view matrix, based on light position and lookat. Used for shadow mapping.
 void DirectionalLight::generateViewMatrix()
@@ -42,6 +45,31 @@ void MyLight::generateOrthoMatrix(float screenWidth, float screenHeight, float n
 {
 	orthoMatrix = XMMatrixOrthographicLH(screenWidth, screenHeight, nearD, farD);
 	projectionMatrix = orthoMatrix;
+}
+
+string MyLight::ToString() {
+	return ToString(guiInfo);
+}
+string MyLight::ToString(ImGuiLightInfo guiInfo) {
+	string s = "";
+	s += Float4ToStr(guiInfo.ambient) + ",";
+	s += Float4ToStr(guiInfo.diffuse) + ",";
+	s += Float4ToStr(guiInfo.specular);
+	return s;
+}
+string DirectionalLight::ToString() {
+	string s = MyLight::ToString(guiInfo);	
+	s += "," + Float4ToStr(guiInfo.pivot) + ",";
+	s += Float4ToStr(guiInfo.direction);
+	return s;
+}
+static string Float4ToStr(const float a[4]) {
+	std::stringstream ss = stringstream();
+	ss << std::defaultfloat << a[0] << ",";
+	ss << std::defaultfloat << a[1] << ",";
+	ss << std::defaultfloat << a[2] << ",";
+	ss << std::defaultfloat << a[3];
+	return "{" + ss.str() + "}";
 }
 
 //void MyLight::setAmbientColour(float red, float green, float blue, float alpha)

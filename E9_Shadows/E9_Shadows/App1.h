@@ -7,6 +7,7 @@
 #include "TextureShader.h"
 #include "ShadowShader.h"
 #include "DepthShader.h"
+#include "LightManager.h"
 
 class App1 : public BaseApplication
 {
@@ -36,6 +37,7 @@ private:
 	ShadowShader* shadowShader;
 	DepthShader* depthShader;
 
+	LightManager* lightManager;
 	std::vector<DirectionalLight*> dirLights;
 	std::vector</*Point*/Light*> pointLights;
 

@@ -82,7 +82,16 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 		dirLight->info.diffuse = XMFLOAT4(0.9*(i == 0), 0.7*(i == 1),0, 1);
 		dirLight->info.direction = XMFLOAT4((i == 0)? 1 : -1, -1, 0, 1);
 		//
+		dirLight->guiInfo.ambient[0] = 0.25;
+		string s = dirLight->ToString();
 	}
+	lightManager = new LightManager();
+
+	lightManager->ReadLightDataFromFile("lightInfo.txt");
+	//lightManager->AddDirectionalLight("light1", new float[4] {0, 0, 0, 1}, new float[4] {1, 1, 0, 1}, new float[4] {0, 0, 0, 0},new float[4] {2, 5, 5, 10}, new float[4] {-0.7, -0.7, 0, 0});
+	//lightManager->AddDirectionalLight("light2", new float[4] {0, 0.234, 0, 1}, new float[4] {1, 1, 1, 1}, new float[4] {0, 0, 1, 0.2},new float[4] {2, 3, 4, 20}, new float[4] {-0.7, 0.7, 0.7, 0});
+	//string s = lightManager->GetDirectionalLight("light1")->ToString();
+	lightManager->WriteLightDataToFile("lightInfo.txt");
 
 	// Configure directional light
 	light = new Light();
@@ -296,8 +305,8 @@ void App1::gui()
 				ImGui::ColorEdit3(diffuseStr.c_str(), dirLight->guiInfo.diffuse, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
 				ImGui::ColorEdit3(specColStr.c_str(), dirLight->guiInfo.specular, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
 				ImGui::DragFloat(specPowStr.c_str(), &dirLight->guiInfo.specular[3], 1, 1, 32) ||
-				ImGui::DragFloat3(pivotStr.c_str(), dirLight->guiInfo.sceneCenter, 0.1, -100, 100) ||
-				ImGui::DragFloat(dstFromPivotStr.c_str(), &dirLight->guiInfo.lightDstFromCenter, 0.1, 0, 30) ||
+				ImGui::DragFloat3(pivotStr.c_str(), dirLight->guiInfo.pivot, 0.1, -100, 100) ||
+				ImGui::DragFloat(dstFromPivotStr.c_str(), &dirLight->guiInfo.pivot[3], 0.1, 0, 30) ||
 				ImGui::DragFloat3(dirStr.c_str(), dirLight->guiInfo.direction, 0.1, -1, 1))
 				dirLight->UpdateLightWithGUIInfo();
 		}

@@ -26,7 +26,7 @@ struct InputType
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-    float4 lightViewPos[DIR_LIGHT_COUNT] : TEXCOORD1;
+    float4 lightViewPos[DIR_LIGHT_COUNT] : TEXCOORD1; //vertex position in light view space (light2Vertex distance can be computed from this)
 };
 
 // Calculate lighting intensity based on direction and normal. Combine with light colour.
@@ -55,11 +55,7 @@ bool isInShadow(Texture2D sMap, float2 uv, float4 lightViewPosition, float bias)
     lightDepthValue -= bias;
     
 	// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
-    if (lightDepthValue < depthValue)
-    {
-        return false;
-    }
-    return true;
+    return (lightDepthValue > depthValue);
 }
 
 float2 getProjectiveCoords(float4 lightViewPosition)
