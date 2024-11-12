@@ -17,16 +17,12 @@ public:
 		float diffuse[4] = { 1,0,0,1 };
 		float specular[4] = { 0,0,0,0 };
 	};
-
-	//virtual void generateViewMatrix();		///< Generates and upto date view matrix, based on current rotation
-	void generatePerspectiveMatrix(float screenNear, float screenFar);			///< Generate project matrix based on current rotation and provided near & far plane
-	void generateOrthoMatrix(float screenWidth, float screenHeight, float nearD, float farD);		///< Generates orthographic matrix based on supplied screen dimensions and near & far plane.
-
-	string ToString(ImGuiLightInfo guiInfo);
-	virtual string ToString();
-
 	LightInfo info;
 	ImGuiLightInfo guiInfo;
+
+	virtual string ToString();
+	string ToString(ImGuiLightInfo guiInfo);
+
 	virtual void UpdateLightWithGUIInfo() {
 		UpdateLightWithGUIInfo(info, guiInfo);
 	}
@@ -35,35 +31,15 @@ public:
 		info.diffuse = XMFLOAT4(guiInfo.diffuse[0], guiInfo.diffuse[1], guiInfo.diffuse[2],1);
 		info.specular = XMFLOAT4(guiInfo.specular[0], guiInfo.specular[1], guiInfo.specular[2], guiInfo.specular[3]);
 	}
-	// Setters
-	//void setAmbientColour(float red, float green, float blue, float alpha);		///< Set ambient colour RGBA
-	//void setDiffuseColour(float red, float green, float blue, float alpha);		///< Set diffuse colour RGBA
-	//void setDirection(float x, float y, float z);								///< Set light direction (for directional lights)
-	//void setSpecularColour(float red, float green, float blue, float alpha);	///< set specular colour RGBA
-	//void setSpecularPower(float power);											///< Set specular power
-	//void setPosition(float x, float y, float z);								///< Set light position (for point lights)
-	//void setLookAt(float x, float y, float z);									///< Set light lookAt (near deprecation)
 
-	// Getters
-	//XMFLOAT4 getAmbientColour();		///< Get ambient colour, returns float4
-	//XMFLOAT4 getDiffuseColour();		///< Get diffuse colour, returns float4
-	//XMFLOAT3 getDirection();			///< Get light direction, returns float3
-	//XMFLOAT4 getSpecularColour();		///< Get specular colour, returns float4
-	//float getSpecularPower();			///< Get specular power, returns float
-	//XMFLOAT3 getPosition();				///< Get light position, returns float3
+	void generatePerspectiveMatrix(float screenNear, float screenFar);			///< Generate project matrix based on current rotation and provided near & far plane
+	void generateOrthoMatrix(float screenWidth, float screenHeight, float nearD, float farD);		///< Generates orthographic matrix based on supplied screen dimensions and near & far plane.
 	virtual XMMATRIX getViewMatrix();			///< Get light view matrix for shadow mapping, returns XMMATRIX
 	XMMATRIX getProjectionMatrix();		///< Get light projection matrix for shadow mapping, returns XMMATRIX
 	XMMATRIX getPerspectiveMatrix();
 	XMMATRIX getOrthoMatrix();			///< Get light orthographic matrix for shadow mapping, returns XMMATRIX
 
 protected:
-	//XMFLOAT4 ambientColour;
-	//XMFLOAT4 diffuseColour;
-	//XMFLOAT3 direction;
-	//XMFLOAT4 specularColour;
-	//float specularPower;
-	//XMVECTOR position;
-	//XMMATRIX viewMatrix;
 	XMMATRIX viewMatrix;
 	XMMATRIX projectionMatrix;
 	XMMATRIX perspectiveMatrix;

@@ -37,8 +37,6 @@ private:
 	DepthShader* depthShader;
 
 	LightManager* lightManager;
-	std::vector</*Point*/Light*> pointLights;
-
 };
 
 #endif

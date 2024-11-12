@@ -67,17 +67,14 @@ void LightManager::ReadLightDataFromFile(string filePath)
 	while (getline(myReadFile, line))
 	{
 		char type = line[0];
-		if (type == '#') continue; //comment
+		if (type == '#') continue; //it's a comment
 		string id = line.substr(2, line.find_first_of(':')-2);
 		string lightStr = line.substr(line.find_first_of(':')+1);
-		ReadDirectionalLight(id, lightStr);
+		if(type == 'D') ReadDirectionalLight(id, lightStr);
+		//else if pointlights, spotlights
 	}
 	myReadFile.close();
 }
-
-//string Float3ToStr(const float a[3]) {
-//	return "{" + std::to_string(a[0]) + "," + std::to_string(a[1]) + "," + std::to_string(a[2]) + "}";
-//}
 void LightManager::WriteLightDataToFile(string filePath)
 {
 	ofstream myWriteFile(filePath);
@@ -90,6 +87,7 @@ void LightManager::WriteLightDataToFile(string filePath)
 		DirectionalLight* l = &(it->second);
 		myWriteFile << "D/" << id << ":" << l->ToString() << endl;
 	}
+	//add support for pointlights, spot lights
 	myWriteFile.close();
 }
 

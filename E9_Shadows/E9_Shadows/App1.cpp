@@ -19,17 +19,6 @@ float lightDir[3] = { 0.0f, -0.7f, 0.7f };
 float sceneCenter[3] = { 0.0f, 0.0f, 0.0f };
 float lightDstFromCenter = 10.0;
 
-//Initial light values
-//float ambientColor[POINT_LIGHT_COUNT + DIR_LIGHT_COUNT][4] = { 0,0,0,1 };
-//float diffuseColor[POINT_LIGHT_COUNT + DIR_LIGHT_COUNT][4] = { 1,1,1,1 };
-//float specular[POINT_LIGHT_COUNT + DIR_LIGHT_COUNT][4] = { 0,0,0,0 }; //(color.rgb, specularPower)
-//
-//float direction[DIR_LIGHT_COUNT][3] = { 0,-1,0 };
-//
-//float position[POINT_LIGHT_COUNT + DIR_LIGHT_COUNT][3] = { 0,10,0 };
-//float attenuation[POINT_LIGHT_COUNT][3] = { 0.5f,0.125f,0.0f, 0.5f,0.125f,0.0f };
-
-
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
 	
@@ -202,6 +191,7 @@ void App1::finalPass()
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), lightManager);
 	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
+	//Render light debug cubes
 	cube->sendData(renderer->getDeviceContext());
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
 	{
@@ -209,8 +199,6 @@ void App1::finalPass()
 		textureShader->setShaderParameters(renderer->getDeviceContext(), XMMatrixScaling(0.1,0.1,0.1)*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
 		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
-	////Render light debug sphere
-	//worldMatrix = XMMatrixTranslation(light->getPosition().x, light->getPosition().y, light->getPosition().z);
 
 
 	//renderer->setZBuffer(false);
@@ -273,39 +261,7 @@ void App1::gui()
 				ImGui::DragFloat(dstFromPivotStr.c_str(), &dirLight->guiInfo.pivot[3], 0.1, 0, 30) ||
 				ImGui::DragFloat3(dirStr.c_str(), dirLight->guiInfo.direction, 0.1, -1, 1))
 				dirLight->UpdateLightWithGUIInfo();
-		}
-
-		
-		//dirLight = dirLights[i];
-		//ImGui::Text("DirectionalLight %d", i);
-
-		////ambient
-		//ImGui::PushID(j);
-		//if (ImGui::ColorEdit3("ambient", &ambientColor[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
-		//	dirLight->setAmbientColour(ambientColor[j][0], ambientColor[j][1], ambientColor[j][2], ambientColor[j][3]);
-		//ImGui::PopID();
-
-		////diffuse
-		//ImGui::PushID(j);
-		//if (ImGui::ColorEdit3("diffuse", &diffuseColor[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
-		//	dirLight->setDiffuseColour(diffuseColor[j][0], diffuseColor[j][1], diffuseColor[j][2], diffuseColor[j][3]);
-		//ImGui::PopID();
-
-		////specular
-		//ImGui::PushID(j);
-		//if (ImGui::ColorEdit3("specularColor", &specular[j][0], ImGuiColorEditFlags_::ImGuiColorEditFlags_Float))
-		//	dirLight->setSpecularColour(specular[j][0], specular[j][1], specular[j][2], 1.0f);
-		//ImGui::PopID();
-		//ImGui::PushID(j); //ensures IDs are unique
-		//if (ImGui::DragFloat("specularPower", &specular[j][3], 1, 1, 32))
-		//	dirLight->setSpecularPower(specular[j][3]);
-		//ImGui::PopID();
-
-		////direction
-		//ImGui::PushID(i);
-		//if (ImGui::DragFloat3("direction", &direction[i][0], 0.1, -1, 1))
-		//	dirLight->setDirection(direction[i][0], direction[i][1], direction[i][2]);
-		//ImGui::PopID();
+		}		
 	}
 	if (ImGui::Button("Save light info")) {
 		lightManager->WriteLightDataToFile("lightInfo.txt");

@@ -17,7 +17,7 @@ void DirectionalLight::generateViewMatrix()
 	{
 		up = XMVectorSet(0.0f, 0.0f, -1.0f, 1.0);
 	}
-	//XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+
 	XMVECTOR dir = XMVectorSet(direction.x, direction.y, direction.z, 1.0f);
 	XMVECTOR right = XMVector3Cross(dir, up);
 	up = XMVector3Cross(right, dir);
@@ -75,69 +75,6 @@ static string Float4ToStr(const float a[4]) {
 	ss << std::defaultfloat << a[3];
 	return "{" + ss.str() + "}";
 }
-
-//void MyLight::setAmbientColour(float red, float green, float blue, float alpha)
-//{
-//	ambientColour = XMFLOAT4(red, green, blue, alpha);
-//}
-//
-//void MyLight::setDiffuseColour(float red, float green, float blue, float alpha)
-//{
-//	diffuseColour = XMFLOAT4(red, green, blue, alpha);
-//}
-//
-//void MyLight::setDirection(float x, float y, float z)
-//{
-//	direction = XMFLOAT3(x, y, z);
-//}
-//
-//void MyLight::setSpecularColour(float red, float green, float blue, float alpha)
-//{
-//	specularColour = XMFLOAT4(red, green, blue, alpha);
-//}
-//
-//void MyLight::setSpecularPower(float power)
-//{
-//	specularPower = power;
-//}
-//
-//void MyLight::setPosition(float x, float y, float z)
-//{
-//	position = XMVectorSet(x, y, z, 1.0f);
-//}
-//
-//XMFLOAT4 MyLight::getAmbientColour()
-//{
-//	return ambientColour;
-//}
-//
-//XMFLOAT4 MyLight::getDiffuseColour()
-//{
-//	return diffuseColour;
-//}
-//
-//
-//XMFLOAT3 MyLight::getDirection()
-//{
-//	return direction;
-//}
-//
-//XMFLOAT4 MyLight::getSpecularColour()
-//{
-//	return specularColour;
-//}
-//
-//
-//float MyLight::getSpecularPower()
-//{
-//	return specularPower;
-//}
-//
-//XMFLOAT3 MyLight::getPosition()
-//{
-//	XMFLOAT3 temp(XMVectorGetX(position), XMVectorGetY(position), XMVectorGetZ(position));
-//	return temp;
-//}
 
 XMMATRIX MyLight::getViewMatrix()
 {

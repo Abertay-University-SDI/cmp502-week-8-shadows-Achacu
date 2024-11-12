@@ -104,9 +104,6 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	XMMATRIX tworld = XMMatrixTranspose(worldMatrix);
 	XMMATRIX tview = XMMatrixTranspose(viewMatrix);
 	XMMATRIX tproj = XMMatrixTranspose(projectionMatrix);
-	//XMMATRIX tLightViewMatrix = XMMatrixTranspose(dirLights[0]->getViewMatrix());
-	//XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(dirLights[0]->getOrthoMatrix());
-	
 
 	//Additional
 	// Send light data to pixel shader
@@ -140,8 +137,6 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	dataPtr->projection = tproj;
 	memcpy(dataPtr->lightViews, lightViews, sizeof(XMMATRIX) * DIR_LIGHT_COUNT);
 	memcpy(dataPtr->lightProjections, lightProjections, sizeof(XMMATRIX) * DIR_LIGHT_COUNT);
-	//dataPtr->lightViews = lightViews;
-	//dataPtr->lightProjections = lightProjections;
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
