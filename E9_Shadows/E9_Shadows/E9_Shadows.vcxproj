@@ -219,6 +219,9 @@
   <ItemGroup>
     <Text Include="lightInfo.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\light_utils.hlsli" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

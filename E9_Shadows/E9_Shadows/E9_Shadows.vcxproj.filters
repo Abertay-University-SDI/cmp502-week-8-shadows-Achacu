@@ -82,4 +82,9 @@
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\light_utils.hlsli">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

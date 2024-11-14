@@ -1,4 +1,4 @@
-#define DIR_LIGHT_COUNT 3
+#include "light_utils.hlsli"
 
 cbuffer MatrixBuffer : register(b0)
 {
@@ -7,7 +7,6 @@ cbuffer MatrixBuffer : register(b0)
 	matrix projectionMatrix;
     matrix lightViewMatrices[DIR_LIGHT_COUNT];
 	matrix lightProjectionMatrices[DIR_LIGHT_COUNT];
-;
 };
 
 struct InputType
