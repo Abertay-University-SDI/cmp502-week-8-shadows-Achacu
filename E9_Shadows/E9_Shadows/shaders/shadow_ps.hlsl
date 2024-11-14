@@ -20,12 +20,18 @@ cbuffer DirectionalLightBuffer : register(b0)
 {
     DirectionalLight dirLights[DIR_LIGHT_COUNT];
 };
+cbuffer CameraBuffer : register(b1)
+{
+    float3 camWorldPos;
+    float padding;
+};
 
 struct InputType
 {
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
+	float3 worldPosition : POSITION;    
     float4 lightViewPos[DIR_LIGHT_COUNT] : TEXCOORD1; //vertex position in light view space (light2Vertex distance can be computed from this)
 };
 
@@ -34,6 +40,12 @@ float4 calculateLightingDirectional(float3 lightDir, float3 normal, float4 light
 {
     float intensity = saturate(dot(normal, lightDir));
     return saturate(lightDiffuse * intensity);
+}
+float4 calculateSpecular(float3 lightDir, float3 normal, float3 viewDir, float3 specularColor, float specularPower)
+{
+    float3 halfVector = normalize(lightDir + viewDir);
+    float3 rawColor = max(dot(normal, halfVector), 0.0) * specularColor;
+    return float4(saturate(pow(rawColor, specularPower)), 1.0f);
 }
 
 // Is the gemoetry in our shadow map
@@ -71,7 +83,7 @@ float4 main(InputType input) : SV_TARGET
 {
     float shadowMapBias = 0.005f; //low value -> self-shadowing artifacts, high value -> some parts of shadow are lost
     float4 finalLightColor = float4(0.f, 0.f, 0.f, 1.f);
-    float4 finalSpecularColor;
+    float4 finalSpecularColor = float4(0.f, 0.f, 0.f, 1.f);
     float4 finalColor = float4(0.f, 0.f, 0.f, 1.f);
     float4 textureColor = shaderTexture.Sample(diffuseSampler, input.tex);
 
@@ -79,7 +91,7 @@ float4 main(InputType input) : SV_TARGET
     float3 normal = normalize(input.normal);
     // Shadow test. Is or isn't in shadow
     
-    float3 normalizedLightDir;
+    float3 normalizedLightDir, viewDir;
     float2 pTexCoord;
     DirectionalLight dLight;
     for (int i = 0; i < DIR_LIGHT_COUNT; i++)
@@ -87,16 +99,19 @@ float4 main(InputType input) : SV_TARGET
         pTexCoord = getProjectiveCoords(input.lightViewPos[i]);
         dLight = dirLights[i];
         normalizedLightDir = normalize(-dLight.lightDir.xyz);
-		
+
         if (hasDepthData(pTexCoord))
         {
-            bool inShadow = isInShadow(depthMapTextures[i], pTexCoord, input.lightViewPos[i], shadowMapBias);
-            // Has depth map data
-            
-            finalLightColor += dLight.ambient + !inShadow * calculateLightingDirectional(normalizedLightDir, normal, dLight.diffuse);            
+            finalLightColor += dLight.ambient;
+            if (!isInShadow(depthMapTextures[i], pTexCoord, input.lightViewPos[i], shadowMapBias))
+            {
+                finalLightColor += calculateLightingDirectional(normalizedLightDir, normal, dLight.diffuse);
+                
+                viewDir = normalize(camWorldPos - input.worldPosition);
+                finalSpecularColor += calculateSpecular(normalizedLightDir, normal, viewDir, dLight.specular.rgb, dLight.specular.a);
+            }
         }
-        //finalSpecularColor += calculateSpecular(normalizedLightDir, normal, viewDir, specularD[i].rgb, specularD[i].a);
     }
-    finalColor = textureColor * finalLightColor/*+ finalSpecularColor*/;
+    finalColor = textureColor * finalLightColor + finalSpecularColor;
     return finalColor;
 }
