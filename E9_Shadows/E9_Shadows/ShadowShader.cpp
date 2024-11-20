@@ -7,7 +7,6 @@ ShadowShader::ShadowShader(ID3D11Device* device, HWND hwnd) : BaseShader(device,
 	initShader(L"shadow_vs.cso", L"shadow_ps.cso");
 }
 
-
 ShadowShader::~ShadowShader()
 {
 	if (sampleState)
