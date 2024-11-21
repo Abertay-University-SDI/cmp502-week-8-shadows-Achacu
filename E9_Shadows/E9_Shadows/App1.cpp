@@ -105,6 +105,7 @@ bool App1::render()
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++) 
 	{
 		depthPass(&(it->second));
+		break;
 	}
 	// Render scene
 	finalPass();
@@ -115,7 +116,21 @@ bool App1::render()
 void App1::depthPass(DirectionalLight* dirLight)
 {
 	// Set the render target to be the render to texture.
-	dirLight->shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
+	//dirLight->shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext(), shadowShader->dirShadowMapsDSV);
+	// Setup the viewport for rendering.
+	D3D11_VIEWPORT viewport;
+	viewport.Width = 4096;
+	viewport.Height = 4096;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	renderer->getDeviceContext()->RSSetViewports(1, &viewport);
+
+	renderer->getDeviceContext()->OMSetRenderTargets(0, 0, shadowShader->dirShadowMapsDSV);  // Only depth output (no color outputs)
+	// Clear the depth stencil view to the farthest depth value (1.0f)
+	renderer->getDeviceContext()->ClearDepthStencilView(shadowShader->dirShadowMapsDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	
 
 	// get the world, view, and projection matrices from the camera and d3d objects.
 	dirLight->generateViewMatrix();
@@ -201,11 +216,11 @@ void App1::finalPass()
 	}
 
 
-	//renderer->setZBuffer(false);
-	//orthoMesh->sendData(renderer->getDeviceContext());
-	//textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), dirLights[0]->shadowMap->getDepthMapSRV());
-	//textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
-	//renderer->setZBuffer(true);
+	renderer->setZBuffer(false);
+	orthoMesh->sendData(renderer->getDeviceContext());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), shadowShader->dirShadowMapsSRV/*lightManager->GetDirLightsBegin()->second.shadowMap->getDepthMapSRV()*/);
+	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	renderer->setZBuffer(true);
 
 	gui();
 	renderer->endScene();

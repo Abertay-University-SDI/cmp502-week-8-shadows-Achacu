@@ -9,6 +9,7 @@ public:
 	ShadowMap(ID3D11Device* device, int mWidth, int mHeight);
 	~ShadowMap();
 
+	void BindDsvAndSetNullRenderTarget(ID3D11DeviceContext* dc, ID3D11DepthStencilView* dsv);
 	void BindDsvAndSetNullRenderTarget(ID3D11DeviceContext* dc);
 	ID3D11ShaderResourceView* getDepthMapSRV() { return mDepthMapSRV; };
 

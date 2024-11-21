@@ -101,20 +101,74 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &dirLightBuffer);
 
-	//create Texture2DArray for shadow maps
-	D3D11_TEXTURE2D_DESC dirShadowMapsDesc;
-	dirShadowMapsDesc.Width = 4096; //TODO: read value from LigthManager
-	dirShadowMapsDesc.Height = 4096; //TODO: read value from LigthManager
-	dirShadowMapsDesc.MipLevels = 1;
-	dirShadowMapsDesc.ArraySize = DIR_LIGHT_COUNT;
-	dirShadowMapsDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; //same as in ShadowMap.cpp
-	dirShadowMapsDesc.SampleDesc.Count = 1;
-	dirShadowMapsDesc.Usage = D3D11_USAGE_DEFAULT;
-	dirShadowMapsDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; //same as in ShadowMap.cpp
-	dirShadowMapsDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	dirShadowMapsDesc.MiscFlags = 0;	
-	renderer->CreateTexture2D(&dirShadowMapsDesc, NULL, &dirShadowMaps);
+	////create Texture2DArray for shadow maps
+	//D3D11_TEXTURE2D_DESC dirShadowMapsDesc;
+	//dirShadowMapsDesc.Width = 4096; //TODO: read value from LigthManager
+	//dirShadowMapsDesc.Height = 4096; //TODO: read value from LigthManager
+	//dirShadowMapsDesc.MipLevels = 1;
+	////dirShadowMapsDesc.ArraySize = DIR_LIGHT_COUNT;
+	//dirShadowMapsDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; //same as in ShadowMap.cpp
+	//dirShadowMapsDesc.SampleDesc.Count = 1;
+	//dirShadowMapsDesc.Usage = D3D11_USAGE_DEFAULT;
+	//dirShadowMapsDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; //same as in ShadowMap.cpp
+	//dirShadowMapsDesc.CPUAccessFlags = 0;
+	//dirShadowMapsDesc.MiscFlags = 0;	
+	//renderer->CreateTexture2D(&dirShadowMapsDesc, NULL, &dirShadowMaps);
 
+
+	D3D11_TEXTURE2D_DESC texDesc;
+	texDesc.Width = 4096;
+	texDesc.Height = 4096;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 1;
+	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
+
+	//ID3D11Texture2D* depthMap = 0;
+	renderer->CreateTexture2D(&texDesc, 0, &dirShadowMaps);
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+	dsvDesc.Flags = 0;
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+	dsvDesc.Texture2D.MipSlice = 0;
+	dsvDesc.Texture2DArray.FirstArraySlice = 0;
+	dsvDesc.Texture2DArray.ArraySize = 1;
+	renderer->CreateDepthStencilView(dirShadowMaps, &dsvDesc, &dirShadowMapsDSV);
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+	srvDesc.Texture2D.MipLevels = texDesc.MipLevels;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2DArray.ArraySize = 1;
+	srvDesc.Texture2DArray.FirstArraySlice = 0;
+	renderer->CreateShaderResourceView(dirShadowMaps, &srvDesc, &dirShadowMapsSRV);
+
+	
+	////Create view to access the shadow map Texture2DArray
+	//D3D11_DEPTH_STENCIL_VIEW_DESC dirShadowMapsDSVDesc;
+	//dirShadowMapsDSVDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//dirShadowMapsDesc.Format;
+	//dirShadowMapsDSVDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;//ARRAY;
+	////dirShadowMapsDSVDesc.Texture2DArray.MipSlice = 0; //no mipmaps; just get the 1st one
+	////dirShadowMapsDSVDesc.Texture2DArray.ArraySize = 1;
+	////dirShadowMapsDSVDesc.Texture2DArray.FirstArraySlice = 0;
+	//renderer->CreateDepthStencilView(dirShadowMaps, &dirShadowMapsDSVDesc, &dirShadowMapsDSV);	
+
+	//D3D11_SHADER_RESOURCE_VIEW_DESC dirShadowMapsSRVDesc = {};
+	//dirShadowMapsSRVDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	//dirShadowMapsSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;//ARRAY;
+	////dirShadowMapsSRVDesc.Texture2DArray.MostDetailedMip = 0;
+	////dirShadowMapsSRVDesc.Texture2DArray.MipLevels = dirShadowMapsDesc.MipLevels;
+	////dirShadowMapsSRVDesc.Texture2DArray.ArraySize = dirShadowMapsDesc.ArraySize;
+
+	//renderer->CreateShaderResourceView(dirShadowMaps, &dirShadowMapsSRVDesc, &dirShadowMapsSRV);
+}
 
 	//RenderTarget = new ID3D11RenderTargetView * [targets];
 	//for (USHORT i = 0; i < targets; i++) 
@@ -126,19 +180,6 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	//	srtDesc.Texture2DArray.FirstArraySlice = i; 
 	//	hr = m_pd3dDevice->CreateRenderTargetView(m_pInputView, &srtDesc, &RenderTarget[i]); 
 	//}
-	
-	//Create view to access the shadow map Texture2DArray
-	D3D11_RENDER_TARGET_VIEW_DESC dirShadowMapsRTVDesc;	
-	dirShadowMapsRTVDesc.Format = dirShadowMapsDesc.Format;
-	dirShadowMapsRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-	dirShadowMapsRTVDesc.Texture2DArray.MipSlice = 0;
-	dirShadowMapsRTVDesc.Texture2DArray.ArraySize = 1;
-	dirShadowMapsRTVDesc.Texture2DArray.FirstArraySlice = 0;
-	renderer->CreateRenderTargetView(dirShadowMaps, &dirShadowMapsRTVDesc, &dirShadowMapsRTV);	
-	
-
-}
-
 
 void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, LightManager* lightManager, Camera* cam)
 {
@@ -167,7 +208,7 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	dirLightPtr = (DirLightBufferType*)mappedResource.pData;
 	DirectionalLight* dirLight;
 
-	ID3D11ShaderResourceView* shadowMaps[DIR_LIGHT_COUNT] = {};
+	//ID3D11ShaderResourceView* shadowMaps[DIR_LIGHT_COUNT] = {};
 	XMMATRIX lightViews[DIR_LIGHT_COUNT] = {};
 	XMMATRIX lightProjections[DIR_LIGHT_COUNT] = {};
 
@@ -176,7 +217,7 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	{
 		DirectionalLight* dirLight = &(it->second);
 	
-		shadowMaps[i] = dirLight->shadowMap->getDepthMapSRV();
+		//shadowMaps[i] = dirLight->shadowMap->getDepthMapSRV();
 		lightViews[i] = XMMatrixTranspose(dirLight->getViewMatrix());
 		lightProjections[i] = XMMatrixTranspose(dirLight->getProjectionMatrix());
 		dirLightPtr->dirLights[i] = dirLight->info;
@@ -199,6 +240,6 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
-	deviceContext->PSSetShaderResources(1, DIR_LIGHT_COUNT, shadowMaps); //i+1 since 0 is reserved for texture
+	deviceContext->PSSetShaderResources(1, 1, &dirShadowMapsSRV); //i+1 since 0 is reserved for texture
 }
 
