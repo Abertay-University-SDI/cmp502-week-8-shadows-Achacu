@@ -52,8 +52,13 @@ private:
 	ID3D11Buffer* matrixBuffer;
 	ID3D11SamplerState* sampleState;
 	ID3D11SamplerState* sampleStateShadow;
+	ID3D11Texture2D* dirShadowMaps = NULL;
+	ID3D11RenderTargetView* dirShadowMapsRTV = NULL;
+
 	ID3D11Buffer* dirLightBuffer;
+
 	ID3D11Buffer* cameraBuffer;
+
 };
 
 #endif

@@ -42,7 +42,7 @@ float4 main(InputType input) : SV_TARGET
         if (hasDepthData(pTexCoord))
         {
             finalLightColor += dLight.ambient;
-            if (!isInShadow(depthMapTextures[i],shadowSampler, pTexCoord, input.lightViewPos[i], shadowMapBias))
+            if (!isInShadow(i, pTexCoord, input.lightViewPos[i], shadowMapBias))
             {
                 finalLightColor += calculateLightingDirectional(normalizedLightDir, normal, dLight.diffuse);
                 

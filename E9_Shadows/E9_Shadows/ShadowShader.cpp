@@ -100,6 +100,43 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	lightBufferDesc.MiscFlags = 0;
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &dirLightBuffer);
+
+	//create Texture2DArray for shadow maps
+	D3D11_TEXTURE2D_DESC dirShadowMapsDesc;
+	dirShadowMapsDesc.Width = 4096; //TODO: read value from LigthManager
+	dirShadowMapsDesc.Height = 4096; //TODO: read value from LigthManager
+	dirShadowMapsDesc.MipLevels = 1;
+	dirShadowMapsDesc.ArraySize = DIR_LIGHT_COUNT;
+	dirShadowMapsDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; //same as in ShadowMap.cpp
+	dirShadowMapsDesc.SampleDesc.Count = 1;
+	dirShadowMapsDesc.Usage = D3D11_USAGE_DEFAULT;
+	dirShadowMapsDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; //same as in ShadowMap.cpp
+	dirShadowMapsDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	dirShadowMapsDesc.MiscFlags = 0;	
+	renderer->CreateTexture2D(&dirShadowMapsDesc, NULL, &dirShadowMaps);
+
+
+	//RenderTarget = new ID3D11RenderTargetView * [targets];
+	//for (USHORT i = 0; i < targets; i++) 
+	//{ 
+	//	srtDesc.Format = sTexDesc.Format; 
+	//	srtDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY; 
+	//	srtDesc.Texture2DArray.MipSlice = 0; 
+	//	srtDesc.Texture2DArray.ArraySize = 1; 
+	//	srtDesc.Texture2DArray.FirstArraySlice = i; 
+	//	hr = m_pd3dDevice->CreateRenderTargetView(m_pInputView, &srtDesc, &RenderTarget[i]); 
+	//}
+	
+	//Create view to access the shadow map Texture2DArray
+	D3D11_RENDER_TARGET_VIEW_DESC dirShadowMapsRTVDesc;	
+	dirShadowMapsRTVDesc.Format = dirShadowMapsDesc.Format;
+	dirShadowMapsRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+	dirShadowMapsRTVDesc.Texture2DArray.MipSlice = 0;
+	dirShadowMapsRTVDesc.Texture2DArray.ArraySize = 1;
+	dirShadowMapsRTVDesc.Texture2DArray.FirstArraySlice = 0;
+	renderer->CreateRenderTargetView(dirShadowMaps, &dirShadowMapsRTVDesc, &dirShadowMapsRTV);	
+	
+
 }
 
 
@@ -160,8 +197,8 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
-	deviceContext->PSSetShaderResources(1, DIR_LIGHT_COUNT, shadowMaps); //i+1 since 0 is reserved for texture
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
+	deviceContext->PSSetShaderResources(1, DIR_LIGHT_COUNT, shadowMaps); //i+1 since 0 is reserved for texture
 }
 
