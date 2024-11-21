@@ -120,7 +120,7 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	texDesc.Width = 4096;
 	texDesc.Height = 4096;
 	texDesc.MipLevels = 1;
-	texDesc.ArraySize = 1;
+	texDesc.ArraySize = 2;
 	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
@@ -140,13 +140,17 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	dsvDesc.Texture2DArray.FirstArraySlice = 0;
 	dsvDesc.Texture2DArray.ArraySize = 1;
 	renderer->CreateDepthStencilView(dirShadowMaps, &dsvDesc, &dirShadowMapsDSV);
+	
+	dsvDesc.Texture2DArray.FirstArraySlice = 1;
+	dsvDesc.Texture2DArray.ArraySize = 1;
+	renderer->CreateDepthStencilView(dirShadowMaps, &dsvDesc, &dirShadowMapsDSV2);
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
 	srvDesc.Texture2D.MipLevels = texDesc.MipLevels;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2DArray.ArraySize = 1;
+	srvDesc.Texture2DArray.ArraySize = 2;
 	srvDesc.Texture2DArray.FirstArraySlice = 0;
 	renderer->CreateShaderResourceView(dirShadowMaps, &srvDesc, &dirShadowMapsSRV);
 

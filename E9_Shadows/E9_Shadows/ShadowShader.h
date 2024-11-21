@@ -37,6 +37,7 @@ private:
 
 public:
 	ID3D11DepthStencilView* dirShadowMapsDSV = NULL;
+	ID3D11DepthStencilView* dirShadowMapsDSV2 = NULL;
 	ID3D11ShaderResourceView* dirShadowMapsSRV;
 
 	ShadowShader(ID3D11Device* device, HWND hwnd);

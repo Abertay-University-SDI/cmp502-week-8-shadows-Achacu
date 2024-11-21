@@ -98,6 +98,7 @@ bool App1::frame()
 	return true;
 }
 
+int shadowI = 0;
 bool App1::render()
 {
 
@@ -105,7 +106,8 @@ bool App1::render()
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++) 
 	{
 		depthPass(&(it->second));
-		break;
+		if(it != lightManager->GetDirLightsBegin()) break;
+		shadowI++;
 	}
 	// Render scene
 	finalPass();
@@ -127,9 +129,9 @@ void App1::depthPass(DirectionalLight* dirLight)
 	viewport.TopLeftY = 0.0f;
 	renderer->getDeviceContext()->RSSetViewports(1, &viewport);
 
-	renderer->getDeviceContext()->OMSetRenderTargets(0, 0, shadowShader->dirShadowMapsDSV);  // Only depth output (no color outputs)
+	renderer->getDeviceContext()->OMSetRenderTargets(0, 0, shadowI == 0? shadowShader->dirShadowMapsDSV : shadowShader->dirShadowMapsDSV2);  // Only depth output (no color outputs)
 	// Clear the depth stencil view to the farthest depth value (1.0f)
-	renderer->getDeviceContext()->ClearDepthStencilView(shadowShader->dirShadowMapsDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	renderer->getDeviceContext()->ClearDepthStencilView(shadowI == 0 ? shadowShader->dirShadowMapsDSV : shadowShader->dirShadowMapsDSV2, D3D11_CLEAR_DEPTH, 1.0f, 0);
 	
 
 	// get the world, view, and projection matrices from the camera and d3d objects.
