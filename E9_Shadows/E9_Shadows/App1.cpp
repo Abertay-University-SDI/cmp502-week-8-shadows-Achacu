@@ -98,16 +98,14 @@ bool App1::frame()
 	return true;
 }
 
-int shadowI = 0;
 bool App1::render()
 {
-
+	int i = 0;
 	// Perform depth pass
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++) 
 	{
-		depthPass(&(it->second));
-		if(it != lightManager->GetDirLightsBegin()) break;
-		shadowI++;
+		depthPass(&(it->second), i);
+		i++;
 	}
 	// Render scene
 	finalPass();
@@ -115,23 +113,23 @@ bool App1::render()
 	return true;
 }
 
-void App1::depthPass(DirectionalLight* dirLight)
+void App1::depthPass(DirectionalLight* dirLight, int lightIndex)
 {
 	// Set the render target to be the render to texture.
-	//dirLight->shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext(), shadowShader->dirShadowMapsDSV);
+	dirLight->shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext(), shadowShader->dirShadowMapsDSVs[lightIndex]);
 	// Setup the viewport for rendering.
-	D3D11_VIEWPORT viewport;
-	viewport.Width = 4096;
-	viewport.Height = 4096;
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-	viewport.TopLeftX = 0.0f;
-	viewport.TopLeftY = 0.0f;
-	renderer->getDeviceContext()->RSSetViewports(1, &viewport);
+	//D3D11_VIEWPORT viewport;
+	//viewport.Width = 4096;
+	//viewport.Height = 4096;
+	//viewport.MinDepth = 0.0f;
+	//viewport.MaxDepth = 1.0f;
+	//viewport.TopLeftX = 0.0f;
+	//viewport.TopLeftY = 0.0f;
+	//renderer->getDeviceContext()->RSSetViewports(1, &viewport);
 
-	renderer->getDeviceContext()->OMSetRenderTargets(0, 0, shadowI == 0? shadowShader->dirShadowMapsDSV : shadowShader->dirShadowMapsDSV2);  // Only depth output (no color outputs)
-	// Clear the depth stencil view to the farthest depth value (1.0f)
-	renderer->getDeviceContext()->ClearDepthStencilView(shadowI == 0 ? shadowShader->dirShadowMapsDSV : shadowShader->dirShadowMapsDSV2, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	//renderer->getDeviceContext()->OMSetRenderTargets(0, 0, shadowShader->dirShadowMapsDSVs[lightIndex]);  // Only depth output (no color outputs)
+	//// Clear the depth stencil view to the farthest depth value (1.0f)
+	//renderer->getDeviceContext()->ClearDepthStencilView(shadowShader->dirShadowMapsDSVs[lightIndex], D3D11_CLEAR_DEPTH, 1.0f, 0);
 	
 
 	// get the world, view, and projection matrices from the camera and d3d objects.

@@ -21,7 +21,7 @@ public:
 
 protected:
 	bool render();
-	void depthPass(DirectionalLight* dirLight);
+	void depthPass(DirectionalLight* dirLight, int lightIndex);
 	void finalPass();
 	void gui();
 
