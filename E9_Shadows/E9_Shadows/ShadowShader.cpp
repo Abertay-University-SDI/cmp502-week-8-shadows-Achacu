@@ -115,64 +115,30 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	//dirShadowMapsDesc.MiscFlags = 0;	
 	//renderer->CreateTexture2D(&dirShadowMapsDesc, NULL, &dirShadowMaps);
 
-
+	//Create Texture2DArray for shadow maps
 	D3D11_TEXTURE2D_DESC texDesc;
 	texDesc.Width = 4096;
 	texDesc.Height = 4096;
 	texDesc.MipLevels = 1;
 	texDesc.ArraySize = DIR_LIGHT_COUNT;
-	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; //24-bit (0->1) red channel, 8-bit typeless green channel
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
-	texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; //needed for shadow maps
 	texDesc.CPUAccessFlags = 0;
 	texDesc.MiscFlags = 0;
-
-	//ID3D11Texture2D* depthMap = 0;
 	renderer->CreateTexture2D(&texDesc, 0, &dirShadowMaps);
-
-	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-	dsvDesc.Flags = 0;
-	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
-	dsvDesc.Texture2D.MipSlice = 0;
-	dsvDesc.Texture2DArray.ArraySize = 1;
 	
-	for (int i = 0; i < texDesc.ArraySize; i++)
-	{
-		dirShadowMapsDSVs.push_back(NULL);
-		dsvDesc.Texture2DArray.FirstArraySlice = i;
-		renderer->CreateDepthStencilView(dirShadowMaps, &dsvDesc, &dirShadowMapsDSVs[i]);
-	}
-	
+	//Create view to access the shadow map Texture2DArray
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; //24-bit (0->1) red channel, 8-bit unused and typeless alpha channel  
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
 	srvDesc.Texture2D.MipLevels = texDesc.MipLevels;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2DArray.ArraySize = texDesc.ArraySize;
 	srvDesc.Texture2DArray.FirstArraySlice = 0;
 	renderer->CreateShaderResourceView(dirShadowMaps, &srvDesc, &dirShadowMapsSRV);
-
-	
-	////Create view to access the shadow map Texture2DArray
-	//D3D11_DEPTH_STENCIL_VIEW_DESC dirShadowMapsDSVDesc;
-	//dirShadowMapsDSVDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//dirShadowMapsDesc.Format;
-	//dirShadowMapsDSVDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;//ARRAY;
-	////dirShadowMapsDSVDesc.Texture2DArray.MipSlice = 0; //no mipmaps; just get the 1st one
-	////dirShadowMapsDSVDesc.Texture2DArray.ArraySize = 1;
-	////dirShadowMapsDSVDesc.Texture2DArray.FirstArraySlice = 0;
-	//renderer->CreateDepthStencilView(dirShadowMaps, &dirShadowMapsDSVDesc, &dirShadowMapsDSV);	
-
-	//D3D11_SHADER_RESOURCE_VIEW_DESC dirShadowMapsSRVDesc = {};
-	//dirShadowMapsSRVDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-	//dirShadowMapsSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;//ARRAY;
-	////dirShadowMapsSRVDesc.Texture2DArray.MostDetailedMip = 0;
-	////dirShadowMapsSRVDesc.Texture2DArray.MipLevels = dirShadowMapsDesc.MipLevels;
-	////dirShadowMapsSRVDesc.Texture2DArray.ArraySize = dirShadowMapsDesc.ArraySize;
-
-	//renderer->CreateShaderResourceView(dirShadowMaps, &dirShadowMapsSRVDesc, &dirShadowMapsSRV);
 }
 
 	//RenderTarget = new ID3D11RenderTargetView * [targets];

@@ -36,9 +36,9 @@ private:
 	};
 
 public:
-	std::vector<ID3D11DepthStencilView*> dirShadowMapsDSVs;
+	ID3D11Texture2D* dirShadowMaps;
 	ID3D11ShaderResourceView* dirShadowMapsSRV;
-
+	
 	ShadowShader(ID3D11Device* device, HWND hwnd);
 	~ShadowShader();
 
@@ -54,7 +54,6 @@ private:
 	ID3D11Buffer* matrixBuffer;
 	ID3D11SamplerState* sampleState;
 	ID3D11SamplerState* sampleStateShadow;
-	ID3D11Texture2D* dirShadowMaps = NULL;
 
 	ID3D11Buffer* dirLightBuffer;
 

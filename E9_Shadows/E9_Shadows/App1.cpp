@@ -54,12 +54,13 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	//Initialize shadow map and projection matrix
 	DirectionalLight* dirLight;
-	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
+	int i = 0;
+	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++, i++)
 	{
 		string id = it->first;
 		dirLight = &(it->second);	
-
-		dirLight->shadowMap = new ShadowMap(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
+		
+		dirLight->shadowMap = new ShadowMap(renderer->getDevice(), shadowmapWidth, shadowmapHeight, shadowShader->dirShadowMaps, i);
 		dirLight->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
 	}
 
@@ -100,12 +101,10 @@ bool App1::frame()
 
 bool App1::render()
 {
-	int i = 0;
 	// Perform depth pass
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++) 
 	{
-		depthPass(&(it->second), i);
-		i++;
+		depthPass(&(it->second));
 	}
 	// Render scene
 	finalPass();
@@ -113,24 +112,10 @@ bool App1::render()
 	return true;
 }
 
-void App1::depthPass(DirectionalLight* dirLight, int lightIndex)
+void App1::depthPass(DirectionalLight* dirLight)
 {
 	// Set the render target to be the render to texture.
-	dirLight->shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext(), shadowShader->dirShadowMapsDSVs[lightIndex]);
-	// Setup the viewport for rendering.
-	//D3D11_VIEWPORT viewport;
-	//viewport.Width = 4096;
-	//viewport.Height = 4096;
-	//viewport.MinDepth = 0.0f;
-	//viewport.MaxDepth = 1.0f;
-	//viewport.TopLeftX = 0.0f;
-	//viewport.TopLeftY = 0.0f;
-	//renderer->getDeviceContext()->RSSetViewports(1, &viewport);
-
-	//renderer->getDeviceContext()->OMSetRenderTargets(0, 0, shadowShader->dirShadowMapsDSVs[lightIndex]);  // Only depth output (no color outputs)
-	//// Clear the depth stencil view to the farthest depth value (1.0f)
-	//renderer->getDeviceContext()->ClearDepthStencilView(shadowShader->dirShadowMapsDSVs[lightIndex], D3D11_CLEAR_DEPTH, 1.0f, 0);
-	
+	dirLight->shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
 
 	// get the world, view, and projection matrices from the camera and d3d objects.
 	dirLight->generateViewMatrix();

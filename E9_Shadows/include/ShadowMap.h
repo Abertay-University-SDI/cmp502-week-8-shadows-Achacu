@@ -7,6 +7,7 @@ class ShadowMap
 {
 public:
 	ShadowMap(ID3D11Device* device, int mWidth, int mHeight);
+	ShadowMap(ID3D11Device* device, int mWidth, int mHeight, ID3D11Texture2D* texArray, int arrayIndex);
 	~ShadowMap();
 
 	void BindDsvAndSetNullRenderTarget(ID3D11DeviceContext* dc, ID3D11DepthStencilView* dsv);

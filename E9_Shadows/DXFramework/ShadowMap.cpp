@@ -46,6 +46,31 @@ ShadowMap::ShadowMap(ID3D11Device* device, int mWidth, int mHeight)
 	//NULL render target
 	renderTargets[1] = { 0 };
 }
+ShadowMap::ShadowMap(ID3D11Device* device, int mWidth, int mHeight, ID3D11Texture2D* texArray, int arrayIndex)
+{
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+	dsvDesc.Flags = 0;
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; //24-bit (0->1) depth, 8-bit unsigned integer stencil
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+	dsvDesc.Texture2D.MipSlice = 0;
+	dsvDesc.Texture2DArray.ArraySize = 1;
+	dsvDesc.Texture2DArray.MipSlice = 0;
+	dsvDesc.Texture2DArray.FirstArraySlice = arrayIndex;
+	device->CreateDepthStencilView(texArray, &dsvDesc, &mDepthMapDSV);
+
+	// Setup the viewport for rendering.
+	viewport.Width = (float)mWidth;
+	viewport.Height = (float)mHeight;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+
+	//NULL render target
+	renderTargets[1] = { 0 };
+}
+
+
 
 ShadowMap::~ShadowMap()
 {
