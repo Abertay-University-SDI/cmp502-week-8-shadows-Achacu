@@ -80,17 +80,12 @@ ShadowMap::~ShadowMap()
 
 void ShadowMap::BindDsvAndSetNullRenderTarget(ID3D11DeviceContext* dc)
 {
-	BindDsvAndSetNullRenderTarget(dc, mDepthMapDSV);
-}
-
-void ShadowMap::BindDsvAndSetNullRenderTarget(ID3D11DeviceContext* dc, ID3D11DepthStencilView* dsv)
-{
 	dc->RSSetViewports(1, &viewport);
 
 	// Set null render target because we are only going to draw to depth buffer.
 	// Setting a null render target will disable color writes.
 	//ID3D11RenderTargetView* renderTargets[1] = { 0 };
-	dc->OMSetRenderTargets(1, renderTargets, dsv);
+	dc->OMSetRenderTargets(1, renderTargets, mDepthMapDSV);
 
-	dc->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	dc->ClearDepthStencilView(mDepthMapDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }

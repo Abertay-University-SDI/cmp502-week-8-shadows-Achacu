@@ -10,9 +10,6 @@
 using namespace std;
 using namespace DirectX;
 
-#define POINT_LIGHT_COUNT 0
-#define DIR_LIGHT_COUNT 3
-
 class ShadowShader : public BaseShader
 {
 private:
@@ -35,10 +32,7 @@ private:
 		DirectionalLight::DirLightInfo dirLights[DIR_LIGHT_COUNT];
 	};
 
-public:
-	ID3D11Texture2D* dirShadowMaps;
-	ID3D11ShaderResourceView* dirShadowMapsSRV;
-	
+public:	
 	ShadowShader(ID3D11Device* device, HWND hwnd);
 	~ShadowShader();
 

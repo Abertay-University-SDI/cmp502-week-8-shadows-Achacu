@@ -42,27 +42,13 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	depthShader = new DepthShader(renderer->getDevice(), hwnd);
 	shadowShader = new ShadowShader(renderer->getDevice(), hwnd);
 
-	// Variables for defining shadow map
-	int shadowmapWidth = 4096;
-	int shadowmapHeight = 4096;
-	int sceneWidth = 100;
-	int sceneHeight = 100;
+
 
 	//Reads light info from file and creates lights
 	lightManager = new LightManager();
 	lightManager->ReadLightDataFromFile("lightInfo.txt");
+	lightManager->InitializeLights(renderer->getDevice());
 
-	//Initialize shadow map and projection matrix
-	DirectionalLight* dirLight;
-	int i = 0;
-	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++, i++)
-	{
-		string id = it->first;
-		dirLight = &(it->second);	
-		
-		dirLight->shadowMap = new ShadowMap(renderer->getDevice(), shadowmapWidth, shadowmapHeight, shadowShader->dirShadowMaps, i);
-		dirLight->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
-	}
 
 	//lightManager->AddDirectionalLight("light1", new float[4] {0, 0, 0, 1}, new float[4] {1, 1, 0, 1}, new float[4] {0, 0, 0, 0},new float[4] {2, 5, 5, 10}, new float[4] {-0.7, -0.7, 0, 0});
 	//lightManager->AddDirectionalLight("light2", new float[4] {0, 0.234, 0, 1}, new float[4] {1, 1, 1, 1}, new float[4] {0, 0, 1, 0.2},new float[4] {2, 3, 4, 20}, new float[4] {-0.7, 0.7, 0.7, 0});
@@ -203,7 +189,7 @@ void App1::finalPass()
 
 	renderer->setZBuffer(false);
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), shadowShader->dirShadowMapsSRV/*lightManager->GetDirLightsBegin()->second.shadowMap->getDepthMapSRV()*/);
+	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), lightManager->dirShadowMapsSRV/*lightManager->GetDirLightsBegin()->second.shadowMap->getDepthMapSRV()*/);
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 
