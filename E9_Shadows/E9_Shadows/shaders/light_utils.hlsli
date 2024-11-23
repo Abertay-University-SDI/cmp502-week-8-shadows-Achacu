@@ -1,6 +1,6 @@
 #define DIR_LIGHT_COUNT 3
 #define POINT_LIGHT_COUNT 2
-#define SPOT_LIGHT_COUNT 1
+#define SPOT_LIGHT_COUNT 2
 
 Texture2DArray<float> depthMapTextures : register(t1);
 //Texture2D depthMapTextures[DIR_LIGHT_COUNT] : register(t1);
@@ -41,39 +41,21 @@ cbuffer LightBuffer : register(b0)
 };
 
 
-// Calculate lighting intensity based on direction and normal. Combine with light colour.
-float4 calculateLightingDirectional(float3 lightDir, float3 normal, float4 lightDiffuse)
-{
-    float intensity = saturate(dot(normal, lightDir));
-    return saturate(lightDiffuse * intensity);
-}
+float4 calculateDiffuseFactor(float3 lightDir, float3 normal) { return saturate(dot(normal, -lightDir)); }
 float3 calculateAttenuation(float dist, float4 att) //(constAtt, linearAtt, quadraticAtt, range)
 {
-    return step(dist, att.w) * 1 / (att.x + att.y * dist + att.z * dist * dist);
+    return saturate(step(dist, att.w) * 1 / (att.x + att.y * dist + att.z * dist * dist));
 }
-float4 calculateLightingSpot(float3 lightDir, float3 lightVector, float3 normal, float4 diffuse, float2 falloff)
+float calculateAngleFalloff(float3 lightDir, float3 lightVector, float halfAngleDot, float fallOffExp)
 {
     float dotForThisPixel = dot(normalize(lightDir), normalize(-lightVector));
-    float intensity = dotForThisPixel > falloff.x ? 1.0 : 0.0f;
-
-    float4 colour = saturate(diffuse * intensity);
-    return colour;
-}
-float4 calculateLightingPoint(float3 lightVector, float3 normal, float4 lightDiffuse, float totalAtt)
-{
-    float intensity = saturate(dot(normal, normalize(lightVector)));
-    float4 colour = saturate(lightDiffuse * intensity * totalAtt);
-    return colour;
+    return min(max(dotForThisPixel - halfAngleDot, 0) / pow(1 - halfAngleDot, fallOffExp), 1);
 }
 float4 calculateSpecular(float3 lightDir, float3 normal, float3 viewDir, float3 specularColor, float specularPower)
 {
     float3 halfVector = normalize(lightDir + viewDir);
     float3 rawColor = max(dot(normal, halfVector), 0.0) * specularColor;
     return float4(saturate(pow(rawColor, specularPower)), 1.0f);
-}
-float4 calculateSpecular(float3 lightDir, float3 normal, float3 viewDir, float3 specularColor, float specularPower, float totalAtt)
-{
-    return float4(saturate(calculateSpecular(lightDir, normal, viewDir, specularColor, specularPower).xyz * totalAtt),1);
 }
 
 // Is the gemoetry in our shadow map

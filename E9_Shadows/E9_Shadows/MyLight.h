@@ -75,7 +75,14 @@ public:
 	}
 	void UpdateLightWithGUIInfo(DirLightInfo& info, ImGuiDirLightInfo& guiInfo) {
 		MyLight::UpdateLightWithGUIInfo(info, guiInfo);
-		info.direction = XMFLOAT4(guiInfo.direction[0], guiInfo.direction[1], guiInfo.direction[2], 0);
+		
+		//direction is normalized
+		XMFLOAT3 dir = XMFLOAT3(guiInfo.direction);
+		XMVECTOR dirVec = XMLoadFloat3(&dir);
+		dirVec = XMVector3Normalize(dirVec);
+		XMStoreFloat3(&dir, dirVec);
+		info.direction = XMFLOAT4(dir.x, dir.y, dir.z, 0);
+
 		info.position = XMFLOAT4(guiInfo.pivot[0] - guiInfo.direction[0] * guiInfo.pivot[3], guiInfo.pivot[1] - guiInfo.direction[1] * guiInfo.pivot[3], guiInfo.pivot[2] - guiInfo.direction[2] * guiInfo.pivot[3], 0);
 	}
 
@@ -141,7 +148,7 @@ public:
 	{
 		XMFLOAT4 position = XMFLOAT4(2, 3, 4, 0);
 		XMFLOAT4 direction = XMFLOAT4(0, -1, 0, 0);
-		XMFLOAT4 attenuation = XMFLOAT4(2, 3, 4, 0);
+		XMFLOAT4 attenuation = XMFLOAT4(0, 0, 0, 20);
 		XMFLOAT4 angleFalloff = XMFLOAT4(0.5, 1, 0, 0);
 	};
 
@@ -159,7 +166,15 @@ public:
 	void UpdateLightWithGUIInfo(SpotLightInfo& info, ImGuiSpotLightInfo& guiInfo)
 	{
 		MyLight::UpdateLightWithGUIInfo(info, guiInfo);
-		info.direction = XMFLOAT4(guiInfo.direction[0], guiInfo.direction[1], guiInfo.direction[2], 0);
+
+		//direction is normalized
+		XMFLOAT3 dir = XMFLOAT3(guiInfo.direction);
+		XMVECTOR dirVec = XMLoadFloat3(&dir);
+		dirVec = XMVector3Normalize(dirVec);
+		XMStoreFloat3(&dir, dirVec);		
+		info.direction = XMFLOAT4(dir.x, dir.y, dir.z, 0);
+		
+
 		info.position = XMFLOAT4(guiInfo.position[0], guiInfo.position[1], guiInfo.position[2], 0);
 		info.attenuation = XMFLOAT4(guiInfo.attenuation);
 		info.angleFalloff = XMFLOAT4(cos(guiInfo.angleFalloff[0]), guiInfo.angleFalloff[1], 0, 0);

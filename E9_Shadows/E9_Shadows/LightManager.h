@@ -7,7 +7,7 @@
 
 #define DIR_LIGHT_COUNT 3
 #define POINT_LIGHT_COUNT 2
-#define SPOT_LIGHT_COUNT 1
+#define SPOT_LIGHT_COUNT 2
 
 class LightManager
 {

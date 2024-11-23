@@ -297,15 +297,16 @@ void App1::gui()
 		string id = it->first;
 		sLight = &(it->second);
 
-		ambientStr = "AmbientP" + id;
-		diffuseStr = "DiffuseP" + id;
-		specColStr = "SpecColP" + id;
-		specPowStr = "SpecPowP" + id;
-		posStr = "PosP" + id;
-		dirStr = "DirP" + id;
-		attStr = "AttP" + id;
-		halfAngleStr = "HalfAngleP" + id;
-		fallOffExpStr = "FalloffExpP" + id;
+		ambientStr = "AmbientS" + id;
+		diffuseStr = "DiffuseS" + id;
+		specColStr = "SpecColS" + id;
+		specPowStr = "SpecPowS" + id;
+		posStr = "PosS" + id;
+		dirStr = "DirS" + id;
+		attStr = "AttS" + id;
+		rangeStr = "RangeS" + id;
+		halfAngleStr = "HalfAngleS" + id;
+		fallOffExpStr = "FalloffExpS" + id;
 
 		if (ImGui::CollapsingHeader(id.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
 		{
@@ -317,8 +318,9 @@ void App1::gui()
 				ImGui::DragFloat3(posStr.c_str(), sLight->guiInfo.position, 0.1, -100, 100) ||
 				ImGui::DragFloat3(dirStr.c_str(), sLight->guiInfo.direction, 0.1, -1, 1) ||
 				ImGui::DragFloat3(attStr.c_str(), sLight->guiInfo.attenuation, 0.01, 0, 1) ||
+				ImGui::DragFloat(rangeStr.c_str(), &sLight->guiInfo.attenuation[3], 0.1, 0, 50) ||
 				ImGui::SliderAngle(halfAngleStr.c_str(), &sLight->guiInfo.angleFalloff[0], 0, 90) ||
-				ImGui::DragFloat(fallOffExpStr.c_str(), &sLight->guiInfo.angleFalloff[1], 0.1, 1, 30))
+				ImGui::DragFloat(fallOffExpStr.c_str(), &sLight->guiInfo.angleFalloff[1], 0.1, 1, 10))
 				sLight->UpdateLightWithGUIInfo();
 		}
 	}

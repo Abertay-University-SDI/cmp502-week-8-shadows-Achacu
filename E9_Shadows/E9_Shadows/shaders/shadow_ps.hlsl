@@ -32,48 +32,66 @@ float4 main(InputType input) : SV_TARGET
     
     float3 normalizedLightDir, viewDir;
     float2 pTexCoord;
+    float diffuseFactor;
     DirectionalLight dLight;
     viewDir = normalize(camWorldPos - input.worldPosition);  
     for (int i = 0; i < DIR_LIGHT_COUNT; i++)
     {
         pTexCoord = getProjectiveCoords(input.lightViewPos[i]);
         dLight = dirLights[i];
-        normalizedLightDir = normalize(-dLight.lightDir.xyz);
 
         if (hasDepthData(pTexCoord))
         {
             finalLightColor += dLight.ambient;
             if (!isInShadow(i, pTexCoord, input.lightViewPos[i], shadowMapBias))
             {
-                finalLightColor += calculateLightingDirectional(normalizedLightDir, normal, dLight.diffuse);
-                
-                finalSpecularColor += calculateSpecular(normalizedLightDir, normal, viewDir, dLight.specular.rgb, dLight.specular.a);
+                diffuseFactor = calculateDiffuseFactor(dLight.lightDir.xyz, normal);
+                [flatten]
+                if (diffuseFactor > 0)
+                {
+                    finalLightColor += saturate(diffuseFactor * dLight.diffuse);
+                    finalSpecularColor += calculateSpecular(dLight.lightDir.xyz, normal, viewDir, dLight.specular.rgb, dLight.specular.a);
+                }                               
             }
         }
     }
     PointLight pLight;
     float3 lightVector;
-    float totalAtt;
+    float attFactor;
     for (i = 0; i < POINT_LIGHT_COUNT; i++)
     {
         pLight = pLights[i];
         lightVector = pLight.position.xyz - input.worldPosition;
-        totalAtt = calculateAttenuation(length(lightVector), pLight.attenuation);
+        attFactor = calculateAttenuation(length(lightVector), pLight.attenuation);
         
         finalLightColor += pLight.ambient;
-        finalLightColor += calculateLightingPoint(lightVector, normal, pLight.diffuse, totalAtt);                
-        finalSpecularColor += calculateSpecular(normalize(lightVector), normal, viewDir, pLight.specular.rgb, pLight.specular.a, totalAtt);
+        diffuseFactor = calculateDiffuseFactor(normalize(-lightVector), normal);
+        [flatten]
+        if (diffuseFactor > 0 && attFactor > 0)
+        {
+            finalLightColor += saturate(diffuseFactor * pLight.diffuse * attFactor);
+            finalSpecularColor += calculateSpecular(normalize(lightVector), normal, viewDir, pLight.specular.rgb, pLight.specular.a) * attFactor;
+        }
+        
+        
     }
     SpotLight sLight;
+    float angleFalloffFactor;
     for (i = 0; i < SPOT_LIGHT_COUNT; i++)
     {
         sLight = sLights[i];
         lightVector = sLight.position.xyz - input.worldPosition;
-        //totalAtt = calculateAttenuation(length(lightVector), sLight.attenuation);
+        attFactor = calculateAttenuation(length(lightVector), sLight.attenuation);
         
         finalLightColor += sLight.ambient;
-        finalLightColor += calculateLightingSpot(sLight.lightDir.xyz, lightVector, normal, sLight.diffuse, sLight.angleFalloff.xy);
-        //finalSpecularColor += calculateSpecular(normalize(lightVector), normal, viewDir, sLight.specular.rgb, sLight.specular.a, totalAtt);
+        angleFalloffFactor = calculateAngleFalloff(sLight.lightDir.xyz, lightVector, sLight.angleFalloff.x, sLight.angleFalloff.y);
+        diffuseFactor = calculateDiffuseFactor(sLight.lightDir.xyz, normal);
+        [flatten]
+        if (diffuseFactor > 0 && attFactor > 0 && angleFalloffFactor > 0)
+        {
+            finalLightColor += saturate(diffuseFactor * pLight.diffuse * attFactor * angleFalloffFactor);
+            finalSpecularColor += calculateSpecular(normalize(lightVector), normal, viewDir, sLight.specular.rgb, sLight.specular.a) * attFactor * angleFalloffFactor;
+        }
     }
     finalColor = textureColor * finalLightColor + finalSpecularColor;
     return finalColor;
