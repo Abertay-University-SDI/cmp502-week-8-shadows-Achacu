@@ -24,10 +24,10 @@ ShadowShader::~ShadowShader()
 		layout->Release();
 		layout = 0;
 	}
-	if (dirLightBuffer)
+	if (lightBuffer)
 	{	
-		dirLightBuffer->Release();
-		dirLightBuffer = 0;
+		lightBuffer->Release();
+		lightBuffer = 0;
 	}
 
 	//Release base shader components
@@ -94,12 +94,12 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 
 	// Setup light buffer
 	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	lightBufferDesc.ByteWidth = sizeof(DirLightBufferType);
+	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
 	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	lightBufferDesc.MiscFlags = 0;
 	lightBufferDesc.StructureByteStride = 0;
-	renderer->CreateBuffer(&lightBufferDesc, NULL, &dirLightBuffer);
+	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
 
 	////create Texture2DArray for shadow maps
 	//D3D11_TEXTURE2D_DESC dirShadowMapsDesc;
@@ -131,7 +131,7 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
-	DirLightBufferType* lightPtr;
+	LightBufferType* lightPtr;
 	
 	// Transpose the matrices to prepare them for the shader.
 	XMMATRIX tworld = XMMatrixTranspose(worldMatrix);
@@ -149,12 +149,10 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 
 	//Additional
 	// Send light data to pixel shader
-	deviceContext->Map(dirLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	DirLightBufferType* dirLightPtr;
-	dirLightPtr = (DirLightBufferType*)mappedResource.pData;
-	DirectionalLight* dirLight;
+	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	LightBufferType* lightsPtr;
+	lightsPtr = (LightBufferType*)mappedResource.pData;
 
-	//ID3D11ShaderResourceView* shadowMaps[DIR_LIGHT_COUNT] = {};
 	XMMATRIX lightViews[DIR_LIGHT_COUNT] = {};
 	XMMATRIX lightProjections[DIR_LIGHT_COUNT] = {};
 
@@ -163,13 +161,18 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	{
 		DirectionalLight* dirLight = &(it->second);
 	
-		//shadowMaps[i] = dirLight->shadowMap->getDepthMapSRV();
 		lightViews[i] = XMMatrixTranspose(dirLight->getViewMatrix());
 		lightProjections[i] = XMMatrixTranspose(dirLight->getProjectionMatrix());
-		dirLightPtr->dirLights[i] = dirLight->info;
+		lightsPtr->dirLights[i] = dirLight->info;
 	}
-	deviceContext->Unmap(dirLightBuffer, 0);
-	deviceContext->PSSetConstantBuffers(0, 1, &dirLightBuffer);
+	i = 0;
+	for (auto it = lightManager->GetPointLightsBegin(); it != lightManager->GetPointLightsEnd(); it++, i++)
+	{
+		PointLight* pLight = &(it->second);
+		lightsPtr->pLights[i] = pLight->info;
+	}
+	deviceContext->Unmap(lightBuffer, 0);
+	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
 	// Lock the constant buffer so it can be written to.
 	deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);

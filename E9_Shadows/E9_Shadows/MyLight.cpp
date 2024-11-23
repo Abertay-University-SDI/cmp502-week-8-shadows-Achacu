@@ -2,6 +2,62 @@
 #include <sstream>
 #include <iomanip>
 
+static string Float4ToStr(const float a[4]) {
+	std::stringstream ss = stringstream();
+	ss << std::defaultfloat << a[0] << ",";
+	ss << std::defaultfloat << a[1] << ",";
+	ss << std::defaultfloat << a[2] << ",";
+	ss << std::defaultfloat << a[3];
+	return "{" + ss.str() + "}";
+}
+string MyLight::ToString() {
+	return ToString(guiInfo);
+}
+string MyLight::ToString(ImGuiLightInfo guiInfo) {
+	string s = "";
+	s += Float4ToStr(guiInfo.ambient) + ",";
+	s += Float4ToStr(guiInfo.diffuse) + ",";
+	s += Float4ToStr(guiInfo.specular);
+	return s;
+}
+
+// Create a projection matrix for the (point) light source. Used in shadow mapping.
+void MyLight::generatePerspectiveMatrix(float screenNear, float screenFar)
+{
+	float fieldOfView, screenAspect;
+
+	// Setup field of view and screen aspect for a square light source.
+	fieldOfView = (float)XM_PI / 2.0f;
+	screenAspect = 1.0f;
+
+	// Create the projection matrix for the light.
+	perspectiveMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenFar);
+	projectionMatrix = perspectiveMatrix;
+}
+// Create orthomatrix for (directional) light source. Used in shadow mapping.
+void MyLight::generateOrthoMatrix(float screenWidth, float screenHeight, float nearD, float farD)
+{
+	orthoMatrix = XMMatrixOrthographicLH(screenWidth, screenHeight, nearD, farD);
+	projectionMatrix = orthoMatrix;
+}
+XMMATRIX MyLight::getViewMatrix()
+{
+	return viewMatrix;
+}
+
+XMMATRIX MyLight::getProjectionMatrix()
+{
+	return projectionMatrix;
+}
+XMMATRIX MyLight::getPerspectiveMatrix()
+{
+	return perspectiveMatrix;
+}
+XMMATRIX MyLight::getOrthoMatrix()
+{
+	return orthoMatrix;
+}
+
 
 //create view matrix, based on light position and lookat. Used for shadow mapping.
 void DirectionalLight::generateViewMatrix()
@@ -26,70 +82,28 @@ void DirectionalLight::generateViewMatrix()
 	viewMatrix = XMMatrixLookAtLH(position, position + dir, up);
 }
 
-// Create a projection matrix for the (point) light source. Used in shadow mapping.
-void MyLight::generatePerspectiveMatrix(float screenNear, float screenFar)
-{
-	float fieldOfView, screenAspect;
-
-	// Setup field of view and screen aspect for a square light source.
-	fieldOfView = (float)XM_PI / 2.0f;
-	screenAspect = 1.0f;
-
-	// Create the projection matrix for the light.
-	perspectiveMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenFar);
-	projectionMatrix = perspectiveMatrix;
-}
-
-// Create orthomatrix for (directional) light source. Used in shadow mapping.
-void MyLight::generateOrthoMatrix(float screenWidth, float screenHeight, float nearD, float farD)
-{
-	orthoMatrix = XMMatrixOrthographicLH(screenWidth, screenHeight, nearD, farD);
-	projectionMatrix = orthoMatrix;
-}
 XMMATRIX DirectionalLight::GetWorldMatrix()
 {
 	return XMMatrixTranslation(info.position.x, info.position.y, info.position.z);
 }
 
-string MyLight::ToString() {
-	return ToString(guiInfo);
-}
-string MyLight::ToString(ImGuiLightInfo guiInfo) {
-	string s = "";
-	s += Float4ToStr(guiInfo.ambient) + ",";
-	s += Float4ToStr(guiInfo.diffuse) + ",";
-	s += Float4ToStr(guiInfo.specular);
-	return s;
-}
+
 string DirectionalLight::ToString() {
 	string s = MyLight::ToString(guiInfo);	
 	s += "," + Float4ToStr(guiInfo.pivot) + ",";
 	s += Float4ToStr(guiInfo.direction);
 	return s;
 }
-static string Float4ToStr(const float a[4]) {
-	std::stringstream ss = stringstream();
-	ss << std::defaultfloat << a[0] << ",";
-	ss << std::defaultfloat << a[1] << ",";
-	ss << std::defaultfloat << a[2] << ",";
-	ss << std::defaultfloat << a[3];
-	return "{" + ss.str() + "}";
-}
 
-XMMATRIX MyLight::getViewMatrix()
-{
-	return viewMatrix;
-}
 
-XMMATRIX MyLight::getProjectionMatrix()
+XMMATRIX PointLight::GetWorldMatrix()
 {
-	return projectionMatrix;
+	return XMMatrixTranslation(info.position.x, info.position.y, info.position.z);
 }
-XMMATRIX MyLight::getPerspectiveMatrix()
+string PointLight::ToString()
 {
-	return perspectiveMatrix;
-}
-XMMATRIX MyLight::getOrthoMatrix()
-{
-	return orthoMatrix;
+	string s = MyLight::ToString(guiInfo);
+	s += "," + Float4ToStr(guiInfo.position) + ",";
+	s += Float4ToStr(guiInfo.attenuation);
+	return s;
 }

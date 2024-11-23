@@ -6,33 +6,10 @@ LightManager::LightManager()
 	dirLights = map<string, DirectionalLight>();
 }
 
-DirectionalLight* LightManager::GetDirectionalLight(string id)
-{
-	return &dirLights.at(id);
-}
-std::map<string, DirectionalLight>::iterator LightManager::GetDirLightsBegin() {
-	return dirLights.begin();
-}
-std::map<string, DirectionalLight>::iterator LightManager::GetDirLightsEnd() {
-	return dirLights.end();
-}
-
-void LightManager::FillLightInfo(DirectionalLight* light, float ambient[4], float diffuse[4], float specular[4]) {
-	memcpy(light->guiInfo.ambient, ambient, sizeof(float[4]));
-	memcpy(light->guiInfo.diffuse, diffuse, sizeof(float[4]));
-	memcpy(light->guiInfo.specular, specular, sizeof(float[4]));
-}
-void LightManager::AddDirectionalLight(string id, float ambient[4], float diffuse[4], float specular[4], float pivot[4], float direction[4])
-{
-	DirectionalLight light = DirectionalLight();
-	FillLightInfo(&light, ambient, diffuse, specular);
-	memcpy(light.guiInfo.pivot, pivot, sizeof(float[4]));
-	memcpy(light.guiInfo.direction, direction, sizeof(float[4]));
-
-	light.UpdateLightWithGUIInfo();
-	dirLights[id] = light;
-}
-
+std::map<string, DirectionalLight>::iterator LightManager::GetDirLightsBegin() { return dirLights.begin(); }
+std::map<string, DirectionalLight>::iterator LightManager::GetDirLightsEnd() { return dirLights.end(); }
+std::map<string, PointLight>::iterator LightManager::GetPointLightsBegin() { return pLights.begin(); }
+std::map<string, PointLight>::iterator LightManager::GetPointLightsEnd() { return pLights.end(); }
 
 void StrToFloat4(string s, float a[4]) {
 	std::stringstream ss(s);
@@ -42,6 +19,23 @@ void StrToFloat4(string s, float a[4]) {
 		getline(ss, coord, ',');
 		a[i] = atof(coord.c_str());
 	}
+}
+void LightManager::ReadLightDataFromFile(string filePath) //public
+{
+	ifstream myReadFile(filePath);
+
+	string line;
+	while (getline(myReadFile, line))
+	{
+		char type = line[0];
+		if (type == '#') continue; //it's a comment
+		string id = line.substr(2, line.find_first_of(':')-2);
+		string lightStr = line.substr(line.find_first_of(':')+1);
+		if(type == 'D') ReadDirectionalLight(id, lightStr);
+		else if(type == 'P') ReadPointLight(id, lightStr);
+		//else if pointlights, spotlights
+	}
+	myReadFile.close();
 }
 void LightManager::ReadDirectionalLight(string id, string lightStr) 
 {
@@ -62,21 +56,72 @@ void LightManager::ReadDirectionalLight(string id, string lightStr)
 
 	AddDirectionalLight(id, ambient, diffuse, specular, pivot, direction);
 }
-void LightManager::ReadLightDataFromFile(string filePath) //public
+void LightManager::ReadPointLight(string id, string lightStr)
 {
-	ifstream myReadFile(filePath);
+	std::stringstream ss(lightStr);
+	float ambient[4], diffuse[4], specular[4], pos[4], att[4];
+	string ambientStr, diffuseStr, specularStr, posStr, attStr;
 
-	string line;
-	while (getline(myReadFile, line))
+	getline(ss, ambientStr, '}');
+	StrToFloat4(ambientStr.substr(1), ambient);
+	getline(ss, diffuseStr, '}');
+	StrToFloat4(diffuseStr.substr(2), diffuse);
+	getline(ss, specularStr, '}');
+	StrToFloat4(specularStr.substr(2), specular);
+	getline(ss, posStr, '}');
+	StrToFloat4(posStr.substr(2), pos);
+	getline(ss, attStr, '}');
+	StrToFloat4(attStr.substr(2), att);
+
+	AddPointLight(id, ambient, diffuse, specular, pos, att);
+}
+
+void LightManager::AddDirectionalLight(string id, float ambient[4], float diffuse[4], float specular[4], float pivot[4], float direction[4])
+{
+	DirectionalLight light = DirectionalLight();
+	memcpy(light.guiInfo.ambient, ambient, sizeof(float[4]));
+	memcpy(light.guiInfo.diffuse, diffuse, sizeof(float[4]));
+	memcpy(light.guiInfo.specular, specular, sizeof(float[4]));
+	memcpy(light.guiInfo.pivot, pivot, sizeof(float[4]));
+	memcpy(light.guiInfo.direction, direction, sizeof(float[4]));
+
+	light.UpdateLightWithGUIInfo();
+	dirLights[id] = light;
+}
+void LightManager::AddPointLight(string id, float ambient[4], float diffuse[4], float specular[4], float position[4], float attenuation[4])
+{
+	PointLight light = PointLight();
+	memcpy(light.guiInfo.ambient, ambient, sizeof(float[4]));
+	memcpy(light.guiInfo.diffuse, diffuse, sizeof(float[4]));
+	memcpy(light.guiInfo.specular, specular, sizeof(float[4]));
+	memcpy(light.guiInfo.position, position, sizeof(float[4]));
+	memcpy(light.guiInfo.attenuation, attenuation, sizeof(float[4]));
+
+	light.UpdateLightWithGUIInfo();
+	pLights[id] = light;
+}
+
+void LightManager::WriteLightDataToFile(string filePath) //public
+{
+	ofstream myWriteFile(filePath);
+	myWriteFile.clear();
+
+	myWriteFile << "#DirLights:{ambient},{diffuse},{specular},{pivot},{direction}\n";
+	for (auto it = dirLights.begin(); it != dirLights.end(); it++)
 	{
-		char type = line[0];
-		if (type == '#') continue; //it's a comment
-		string id = line.substr(2, line.find_first_of(':')-2);
-		string lightStr = line.substr(line.find_first_of(':')+1);
-		if(type == 'D') ReadDirectionalLight(id, lightStr);
-		//else if pointlights, spotlights
+		string id = it->first;
+		DirectionalLight* l = &(it->second);
+		myWriteFile << "D/" << id << ":" << l->ToString() << endl;
 	}
-	myReadFile.close();
+	myWriteFile << "#PointLights:{ambient},{diffuse},{specular},{position},{attFactors.xyz, range}\n";
+	for (auto it = pLights.begin(); it != pLights.end(); it++)
+	{
+		string id = it->first;
+		PointLight* l = &(it->second);
+		myWriteFile << "P/" << id << ":" << l->ToString() << endl;
+	}
+	//add support for pointlights, spot lights
+	myWriteFile.close();
 }
 void LightManager::InitializeLights(ID3D11Device* renderer)
 {
@@ -120,20 +165,5 @@ void LightManager::InitializeDirLights(ID3D11Device* renderer)
 		dirLight->shadowMap = new ShadowMap(renderer, shadowmapWidth, shadowmapHeight, dirShadowMaps, i);
 		dirLight->generateOrthoMatrix((float)sceneWidth, (float)sceneHeight, 0.1f, 100.f);
 	}
-}
-void LightManager::WriteLightDataToFile(string filePath) //public
-{
-	ofstream myWriteFile(filePath);
-	myWriteFile.clear();
-
-	myWriteFile << "#DirLights:{ambient},{diffuse},{specular},{pivot},{direction}\n";
-	for (auto it = dirLights.begin(); it != dirLights.end(); it++)
-	{
-		string id = it->first;
-		DirectionalLight* l = &(it->second);
-		myWriteFile << "D/" << id << ":" << l->ToString() << endl;
-	}
-	//add support for pointlights, spot lights
-	myWriteFile.close();
 }
 

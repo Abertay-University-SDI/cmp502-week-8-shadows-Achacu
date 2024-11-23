@@ -249,6 +249,34 @@ void App1::gui()
 				dirLight->UpdateLightWithGUIInfo();
 		}		
 	}
+	PointLight* pLight;
+	string posStr, attStr, rangeStr;
+	for (auto it = lightManager->GetPointLightsBegin(); it != lightManager->GetPointLightsEnd(); it++)
+	{
+		string id = it->first;
+		pLight = &(it->second);
+
+		ambientStr = "AmbientP" + id;
+		diffuseStr = "DiffuseP" + id;
+		specColStr = "SpecColP" + id;
+		specPowStr = "SpecPowP" + id;
+		posStr = "PosP" + id;
+		attStr = "AttP" + id;
+		rangeStr = "RangeP" + id;
+
+		if (ImGui::CollapsingHeader(id.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
+		{
+
+			if (ImGui::ColorEdit3(ambientStr.c_str(), pLight->guiInfo.ambient, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+				ImGui::ColorEdit3(diffuseStr.c_str(), pLight->guiInfo.diffuse, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+				ImGui::ColorEdit3(specColStr.c_str(), pLight->guiInfo.specular, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+				ImGui::DragFloat(specPowStr.c_str(), &pLight->guiInfo.specular[3], 1, 1, 64) ||
+				ImGui::DragFloat3(posStr.c_str(), pLight->guiInfo.position, 0.1, -100, 100) ||
+				ImGui::DragFloat3(attStr.c_str(), pLight->guiInfo.attenuation, 0.01, 0, 1) ||
+				ImGui::DragFloat(rangeStr.c_str(), &pLight->guiInfo.attenuation[3], 0.1, 0, 30))
+				pLight->UpdateLightWithGUIInfo();
+		}
+	}
 	if (ImGui::Button("Save light info")) {
 		lightManager->WriteLightDataToFile("lightInfo.txt");
 	}

@@ -33,6 +33,7 @@ float4 main(InputType input) : SV_TARGET
     float3 normalizedLightDir, viewDir;
     float2 pTexCoord;
     DirectionalLight dLight;
+    viewDir = normalize(camWorldPos - input.worldPosition);  
     for (int i = 0; i < DIR_LIGHT_COUNT; i++)
     {
         pTexCoord = getProjectiveCoords(input.lightViewPos[i]);
@@ -46,10 +47,20 @@ float4 main(InputType input) : SV_TARGET
             {
                 finalLightColor += calculateLightingDirectional(normalizedLightDir, normal, dLight.diffuse);
                 
-                viewDir = normalize(camWorldPos - input.worldPosition);
                 finalSpecularColor += calculateSpecular(normalizedLightDir, normal, viewDir, dLight.specular.rgb, dLight.specular.a);
             }
         }
+    }
+    PointLight pLight;
+    float3 lightVector;
+    for (i = 0; i < POINT_LIGHT_COUNT; i++)
+    {
+        pLight = pLights[i];
+        lightVector = pLight.position.xyz - input.worldPosition;
+        
+        finalLightColor += pLight.ambient;
+        finalLightColor += calculateLightingPoint(lightVector, normal, pLight.diffuse, pLight.attenuation);                
+        finalSpecularColor += calculateSpecular(normalize(lightVector), normal, viewDir, pLight.specular.rgb, pLight.specular.a);
     }
     finalColor = textureColor * finalLightColor + finalSpecularColor;
     return finalColor;

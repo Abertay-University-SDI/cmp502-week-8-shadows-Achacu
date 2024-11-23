@@ -29,7 +29,7 @@ public:
 	void UpdateLightWithGUIInfo(LightInfo& info, ImGuiLightInfo& guiInfo) {
 		info.ambient = XMFLOAT4(guiInfo.ambient[0], guiInfo.ambient[1], guiInfo.ambient[2],1);
 		info.diffuse = XMFLOAT4(guiInfo.diffuse[0], guiInfo.diffuse[1], guiInfo.diffuse[2],1);
-		info.specular = XMFLOAT4(guiInfo.specular[0], guiInfo.specular[1], guiInfo.specular[2], guiInfo.specular[3]);
+		info.specular = XMFLOAT4(guiInfo.specular);
 	}
 
 	void generatePerspectiveMatrix(float screenNear, float screenFar);			///< Generate project matrix based on current rotation and provided near & far plane
@@ -81,6 +81,46 @@ public:
 
 	ImGuiDirLightInfo guiInfo;
 	DirLightInfo info;
+	ShadowMap* shadowMap;
+};
+class PointLight : public MyLight
+{
+public:
+	PointLight()
+	{
+		info = PointLightInfo();
+		guiInfo = ImGuiPointLightInfo();
+	}
+	void generateViewMatrix();		///< Generates and upto date view matrix, based on current rotation
+
+	XMMATRIX GetWorldMatrix();
+
+	string ToString();
+
+	struct PointLightInfo : public LightInfo
+	{
+		XMFLOAT4 position = XMFLOAT4(2, 3, 4, 0);
+		XMFLOAT4 attenuation = XMFLOAT4(2, 3, 4, 0);
+	};
+
+	struct ImGuiPointLightInfo : public ImGuiLightInfo {
+		float position[4] = { 0,-1,0,0 };
+		float attenuation[4] = { 0,0,0, 10 }; //(constFactor, linearFactor, quadraticFactor, range)
+	};
+
+	virtual void UpdateLightWithGUIInfo()
+	{
+		UpdateLightWithGUIInfo(info, guiInfo);
+	}
+	void UpdateLightWithGUIInfo(PointLightInfo& info, ImGuiPointLightInfo& guiInfo)
+	{
+		MyLight::UpdateLightWithGUIInfo(info, guiInfo);
+		info.position = XMFLOAT4(guiInfo.position[0], guiInfo.position[1], guiInfo.position[2], 0);
+		info.attenuation = XMFLOAT4(guiInfo.attenuation);
+	}
+
+	ImGuiPointLightInfo guiInfo;
+	PointLightInfo info;
 	ShadowMap* shadowMap;
 };
 

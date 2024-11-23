@@ -1,4 +1,5 @@
 #define DIR_LIGHT_COUNT 3
+#define POINT_LIGHT_COUNT 2
 
 Texture2DArray<float> depthMapTextures : register(t1);
 //Texture2D depthMapTextures[DIR_LIGHT_COUNT] : register(t1);
@@ -12,10 +13,19 @@ struct DirectionalLight
     float4 position;
     float4 lightDir;
 };
+struct PointLight
+{
+    float4 ambient;
+    float4 diffuse;
+    float4 specular; //(color.rgb, power)
+    float4 position;
+    float4 attenuation;
+};
 
 cbuffer LightBuffer : register(b0)
 {
     DirectionalLight dirLights[DIR_LIGHT_COUNT];
+    PointLight pLights[POINT_LIGHT_COUNT];
 };
 
 
@@ -24,6 +34,26 @@ float4 calculateLightingDirectional(float3 lightDir, float3 normal, float4 light
 {
     float intensity = saturate(dot(normal, lightDir));
     return saturate(lightDiffuse * intensity);
+}
+float3 calculateAttenuation(float dist, float constAtt, float linearAtt, float quadraticAtt, float range)
+{
+    return step(dist, range) * 1 / (constAtt + (linearAtt * dist) + (quadraticAtt * pow(dist, 2)));
+}
+float4 calculateLightingSpot(float3 lightDir, float3 lightPos, float3 worldPosition, float3 normal, float4 diffuse, float apertureDot)
+{
+    float3 lightVector = normalize(lightPos - worldPosition);
+    float dotForThisPixel = dot(normalize(-lightDir), lightVector);
+    float intensity = dotForThisPixel > apertureDot ? 1.0 : 0.0f;
+
+    float4 colour = saturate(diffuse * intensity);
+    return colour;
+}
+float4 calculateLightingPoint(float3 lightVector, float3 normal, float4 lightDiffuse, float4 attenuation)
+{
+    float intensity = saturate(dot(normal, normalize(lightVector)));
+    float totalAtt = calculateAttenuation(length(lightVector), attenuation.x, attenuation.y, attenuation.z, attenuation.w);
+    float4 colour = saturate(lightDiffuse * intensity * totalAtt);
+    return colour;
 }
 float4 calculateSpecular(float3 lightDir, float3 normal, float3 viewDir, float3 specularColor, float specularPower)
 {

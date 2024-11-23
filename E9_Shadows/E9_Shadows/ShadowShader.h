@@ -27,9 +27,10 @@ private:
 		XMFLOAT3 worldPos;
 		float padding;
 	};
-	struct DirLightBufferType
+	struct LightBufferType
 	{
 		DirectionalLight::DirLightInfo dirLights[DIR_LIGHT_COUNT];
+		PointLight::PointLightInfo pLights[POINT_LIGHT_COUNT];
 	};
 
 public:	
@@ -49,7 +50,7 @@ private:
 	ID3D11SamplerState* sampleState;
 	ID3D11SamplerState* sampleStateShadow;
 
-	ID3D11Buffer* dirLightBuffer;
+	ID3D11Buffer* lightBuffer;
 
 	ID3D11Buffer* cameraBuffer;
 
