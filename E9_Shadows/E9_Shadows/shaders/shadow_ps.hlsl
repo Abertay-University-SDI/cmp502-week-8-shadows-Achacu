@@ -53,14 +53,16 @@ float4 main(InputType input) : SV_TARGET
     }
     PointLight pLight;
     float3 lightVector;
+    float totalAtt;
     for (i = 0; i < POINT_LIGHT_COUNT; i++)
     {
         pLight = pLights[i];
         lightVector = pLight.position.xyz - input.worldPosition;
+        totalAtt = calculateAttenuation(length(lightVector), pLight.attenuation);
         
         finalLightColor += pLight.ambient;
-        finalLightColor += calculateLightingPoint(lightVector, normal, pLight.diffuse, pLight.attenuation);                
-        finalSpecularColor += calculateSpecular(normalize(lightVector), normal, viewDir, pLight.specular.rgb, pLight.specular.a);
+        finalLightColor += calculateLightingPoint(lightVector, normal, pLight.diffuse, totalAtt);                
+        finalSpecularColor += calculateSpecular(normalize(lightVector), normal, viewDir, pLight.specular.rgb, pLight.specular.a, totalAtt);
     }
     finalColor = textureColor * finalLightColor + finalSpecularColor;
     return finalColor;

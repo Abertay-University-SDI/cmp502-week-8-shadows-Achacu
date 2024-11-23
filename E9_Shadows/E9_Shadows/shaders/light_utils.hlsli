@@ -35,9 +35,9 @@ float4 calculateLightingDirectional(float3 lightDir, float3 normal, float4 light
     float intensity = saturate(dot(normal, lightDir));
     return saturate(lightDiffuse * intensity);
 }
-float3 calculateAttenuation(float dist, float constAtt, float linearAtt, float quadraticAtt, float range)
+float3 calculateAttenuation(float dist, float4 att) //(constAtt, linearAtt, quadraticAtt, range)
 {
-    return step(dist, range) * 1 / (constAtt + (linearAtt * dist) + (quadraticAtt * pow(dist, 2)));
+    return step(dist, att.w) * 1 / (att.x + att.y * dist + att.z * dist * dist);
 }
 float4 calculateLightingSpot(float3 lightDir, float3 lightPos, float3 worldPosition, float3 normal, float4 diffuse, float apertureDot)
 {
@@ -48,10 +48,9 @@ float4 calculateLightingSpot(float3 lightDir, float3 lightPos, float3 worldPosit
     float4 colour = saturate(diffuse * intensity);
     return colour;
 }
-float4 calculateLightingPoint(float3 lightVector, float3 normal, float4 lightDiffuse, float4 attenuation)
+float4 calculateLightingPoint(float3 lightVector, float3 normal, float4 lightDiffuse, float totalAtt)
 {
     float intensity = saturate(dot(normal, normalize(lightVector)));
-    float totalAtt = calculateAttenuation(length(lightVector), attenuation.x, attenuation.y, attenuation.z, attenuation.w);
     float4 colour = saturate(lightDiffuse * intensity * totalAtt);
     return colour;
 }
@@ -60,6 +59,10 @@ float4 calculateSpecular(float3 lightDir, float3 normal, float3 viewDir, float3 
     float3 halfVector = normalize(lightDir + viewDir);
     float3 rawColor = max(dot(normal, halfVector), 0.0) * specularColor;
     return float4(saturate(pow(rawColor, specularPower)), 1.0f);
+}
+float4 calculateSpecular(float3 lightDir, float3 normal, float3 viewDir, float3 specularColor, float specularPower, float totalAtt)
+{
+    return float4(saturate(calculateSpecular(lightDir, normal, viewDir, specularColor, specularPower).xyz * totalAtt),1);
 }
 
 // Is the gemoetry in our shadow map
