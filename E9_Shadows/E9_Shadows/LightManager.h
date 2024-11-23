@@ -7,6 +7,7 @@
 
 #define DIR_LIGHT_COUNT 3
 #define POINT_LIGHT_COUNT 2
+#define SPOT_LIGHT_COUNT 1
 
 class LightManager
 {
@@ -19,6 +20,10 @@ public:
 	std::map<string, DirectionalLight>::iterator GetDirLightsEnd();
 	std::map<string, PointLight>::iterator GetPointLightsBegin();
 	std::map<string, PointLight>::iterator GetPointLightsEnd();
+	std::map<string, SpotLight>::iterator GetSpotLightsBegin();
+	std::map<string, SpotLight>::iterator GetSpotLightsEnd();
+
+
 
 	void ReadLightDataFromFile(string filePath);
 	void InitializeLights(ID3D11Device* renderer);
@@ -31,6 +36,9 @@ private:
 	void ReadPointLight(string id, string lightStr);
 	void AddPointLight(string id, float ambient[4], float diffuse[4], float specular[4], float position[4], float attenuation[4]);
 
+	void ReadSpotLight(string id, string lightStr);
+	void AddSpotLight(string id, float ambient[4], float diffuse[4], float specular[4], float position[4], float direction[4], float attenuation[4], float angleFalloff[4]);
+
 	int shadowmapWidth = 4096;
 	int shadowmapHeight = 4096;
 	int sceneWidth = 100;
@@ -40,6 +48,7 @@ private:
 	ID3D11Texture2D* dirShadowMaps;
 
 	std::map<string, PointLight> pLights;
+	std::map<string, SpotLight> sLights;
 };
 
 

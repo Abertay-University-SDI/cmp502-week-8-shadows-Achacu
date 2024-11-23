@@ -100,32 +100,7 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	lightBufferDesc.MiscFlags = 0;
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
-
-	////create Texture2DArray for shadow maps
-	//D3D11_TEXTURE2D_DESC dirShadowMapsDesc;
-	//dirShadowMapsDesc.Width = 4096; //TODO: read value from LigthManager
-	//dirShadowMapsDesc.Height = 4096; //TODO: read value from LigthManager
-	//dirShadowMapsDesc.MipLevels = 1;
-	////dirShadowMapsDesc.ArraySize = DIR_LIGHT_COUNT;
-	//dirShadowMapsDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; //same as in ShadowMap.cpp
-	//dirShadowMapsDesc.SampleDesc.Count = 1;
-	//dirShadowMapsDesc.Usage = D3D11_USAGE_DEFAULT;
-	//dirShadowMapsDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; //same as in ShadowMap.cpp
-	//dirShadowMapsDesc.CPUAccessFlags = 0;
-	//dirShadowMapsDesc.MiscFlags = 0;	
-	//renderer->CreateTexture2D(&dirShadowMapsDesc, NULL, &dirShadowMaps);
 }
-
-	//RenderTarget = new ID3D11RenderTargetView * [targets];
-	//for (USHORT i = 0; i < targets; i++) 
-	//{ 
-	//	srtDesc.Format = sTexDesc.Format; 
-	//	srtDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY; 
-	//	srtDesc.Texture2DArray.MipSlice = 0; 
-	//	srtDesc.Texture2DArray.ArraySize = 1; 
-	//	srtDesc.Texture2DArray.FirstArraySlice = i; 
-	//	hr = m_pd3dDevice->CreateRenderTargetView(m_pInputView, &srtDesc, &RenderTarget[i]); 
-	//}
 
 void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, LightManager* lightManager, Camera* cam)
 {
@@ -170,6 +145,12 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	{
 		PointLight* pLight = &(it->second);
 		lightsPtr->pLights[i] = pLight->info;
+	}
+	i = 0;
+	for (auto it = lightManager->GetSpotLightsBegin(); it != lightManager->GetSpotLightsEnd(); it++, i++)
+	{
+		SpotLight* sLight = &(it->second);
+		lightsPtr->sLights[i] = sLight->info;
 	}
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);

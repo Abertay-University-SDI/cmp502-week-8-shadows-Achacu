@@ -123,5 +123,52 @@ public:
 	PointLightInfo info;
 	ShadowMap* shadowMap;
 };
+class SpotLight : public MyLight
+{
+public:
+	SpotLight()
+	{
+		info = SpotLightInfo();
+		guiInfo = ImGuiSpotLightInfo();
+	}
+	void generateViewMatrix();		///< Generates and upto date view matrix, based on current rotation
+
+	XMMATRIX GetWorldMatrix();
+
+	string ToString();
+
+	struct SpotLightInfo : public LightInfo
+	{
+		XMFLOAT4 position = XMFLOAT4(2, 3, 4, 0);
+		XMFLOAT4 direction = XMFLOAT4(0, -1, 0, 0);
+		XMFLOAT4 attenuation = XMFLOAT4(2, 3, 4, 0);
+		XMFLOAT4 angleFalloff = XMFLOAT4(0.5, 1, 0, 0);
+	};
+
+	struct ImGuiSpotLightInfo : public ImGuiLightInfo {
+		float position[4] = { 0,-1,0,0 };
+		float direction[4] = { 0,-1,0,0 };
+		float attenuation[4] = { 0,0,0, 10 }; //(constFactor, linearFactor, quadraticFactor, range)
+		float angleFalloff[4] = { 1.57f,1,0,0 };
+	};
+
+	virtual void UpdateLightWithGUIInfo()
+	{
+		UpdateLightWithGUIInfo(info, guiInfo);
+	}
+	void UpdateLightWithGUIInfo(SpotLightInfo& info, ImGuiSpotLightInfo& guiInfo)
+	{
+		MyLight::UpdateLightWithGUIInfo(info, guiInfo);
+		info.direction = XMFLOAT4(guiInfo.direction[0], guiInfo.direction[1], guiInfo.direction[2], 0);
+		info.position = XMFLOAT4(guiInfo.position[0], guiInfo.position[1], guiInfo.position[2], 0);
+		info.attenuation = XMFLOAT4(guiInfo.attenuation);
+		info.angleFalloff = XMFLOAT4(cos(guiInfo.angleFalloff[0]), guiInfo.angleFalloff[1], 0, 0);
+	}
+
+	ImGuiSpotLightInfo guiInfo;
+	SpotLightInfo info;
+	ShadowMap* shadowMap;
+};
+
 
 static string Float4ToStr(const float a[4]);

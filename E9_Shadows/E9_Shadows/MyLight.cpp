@@ -82,12 +82,7 @@ void DirectionalLight::generateViewMatrix()
 	viewMatrix = XMMatrixLookAtLH(position, position + dir, up);
 }
 
-XMMATRIX DirectionalLight::GetWorldMatrix()
-{
-	return XMMatrixTranslation(info.position.x, info.position.y, info.position.z);
-}
-
-
+XMMATRIX DirectionalLight::GetWorldMatrix() { return XMMatrixTranslation(info.position.x, info.position.y, info.position.z); }
 string DirectionalLight::ToString() {
 	string s = MyLight::ToString(guiInfo);	
 	s += "," + Float4ToStr(guiInfo.pivot) + ",";
@@ -96,14 +91,22 @@ string DirectionalLight::ToString() {
 }
 
 
-XMMATRIX PointLight::GetWorldMatrix()
-{
-	return XMMatrixTranslation(info.position.x, info.position.y, info.position.z);
-}
+XMMATRIX PointLight::GetWorldMatrix() { return XMMatrixTranslation(info.position.x, info.position.y, info.position.z); }
 string PointLight::ToString()
 {
 	string s = MyLight::ToString(guiInfo);
 	s += "," + Float4ToStr(guiInfo.position) + ",";
 	s += Float4ToStr(guiInfo.attenuation);
+	return s;
+}
+
+XMMATRIX SpotLight::GetWorldMatrix() { return XMMatrixTranslation(info.position.x, info.position.y, info.position.z); }
+string SpotLight::ToString()
+{
+	string s = MyLight::ToString(guiInfo);
+	s += "," + Float4ToStr(guiInfo.position) + ",";
+	s += Float4ToStr(guiInfo.direction) + ",";
+	s += Float4ToStr(guiInfo.attenuation) + ",";
+	s += Float4ToStr(guiInfo.angleFalloff);
 	return s;
 }

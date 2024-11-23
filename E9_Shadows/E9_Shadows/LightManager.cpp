@@ -10,6 +10,8 @@ std::map<string, DirectionalLight>::iterator LightManager::GetDirLightsBegin() {
 std::map<string, DirectionalLight>::iterator LightManager::GetDirLightsEnd() { return dirLights.end(); }
 std::map<string, PointLight>::iterator LightManager::GetPointLightsBegin() { return pLights.begin(); }
 std::map<string, PointLight>::iterator LightManager::GetPointLightsEnd() { return pLights.end(); }
+std::map<string, SpotLight>::iterator LightManager::GetSpotLightsBegin() { return sLights.begin(); }
+std::map<string, SpotLight>::iterator LightManager::GetSpotLightsEnd() { return sLights.end(); }
 
 void StrToFloat4(string s, float a[4]) {
 	std::stringstream ss(s);
@@ -33,6 +35,7 @@ void LightManager::ReadLightDataFromFile(string filePath) //public
 		string lightStr = line.substr(line.find_first_of(':')+1);
 		if(type == 'D') ReadDirectionalLight(id, lightStr);
 		else if(type == 'P') ReadPointLight(id, lightStr);
+		else if(type == 'S') ReadSpotLight(id, lightStr);
 		//else if pointlights, spotlights
 	}
 	myReadFile.close();
@@ -75,6 +78,29 @@ void LightManager::ReadPointLight(string id, string lightStr)
 
 	AddPointLight(id, ambient, diffuse, specular, pos, att);
 }
+void LightManager::ReadSpotLight(string id, string lightStr)
+{
+	std::stringstream ss(lightStr);
+	float ambient[4], diffuse[4], specular[4], pos[4], dir[4], att[4], falloff[4];
+	string ambientStr, diffuseStr, specularStr, posStr, dirStr, attStr, falloffStr;
+
+	getline(ss, ambientStr, '}');
+	StrToFloat4(ambientStr.substr(1), ambient);
+	getline(ss, diffuseStr, '}');
+	StrToFloat4(diffuseStr.substr(2), diffuse);
+	getline(ss, specularStr, '}');
+	StrToFloat4(specularStr.substr(2), specular);
+	getline(ss, posStr, '}');
+	StrToFloat4(posStr.substr(2), pos);
+	getline(ss, dirStr, '}');
+	StrToFloat4(dirStr.substr(2), dir);
+	getline(ss, attStr, '}');
+	StrToFloat4(attStr.substr(2), att);
+	getline(ss, falloffStr, '}');
+	StrToFloat4(falloffStr.substr(2), falloff);
+
+	AddSpotLight(id, ambient, diffuse, specular, pos, dir, att, falloff);
+}
 
 void LightManager::AddDirectionalLight(string id, float ambient[4], float diffuse[4], float specular[4], float pivot[4], float direction[4])
 {
@@ -100,6 +126,22 @@ void LightManager::AddPointLight(string id, float ambient[4], float diffuse[4], 
 	light.UpdateLightWithGUIInfo();
 	pLights[id] = light;
 }
+void LightManager::AddSpotLight(string id, float ambient[4], float diffuse[4], float specular[4], float position[4], float direction[4], float attenuation[4], float angleFalloff[4])
+{
+	SpotLight light = SpotLight();
+	memcpy(light.guiInfo.ambient, ambient, sizeof(float[4]));
+	memcpy(light.guiInfo.diffuse, diffuse, sizeof(float[4]));
+	memcpy(light.guiInfo.specular, specular, sizeof(float[4]));
+	memcpy(light.guiInfo.position, position, sizeof(float[4]));
+	memcpy(light.guiInfo.direction, direction, sizeof(float[4]));
+	memcpy(light.guiInfo.attenuation, attenuation, sizeof(float[4]));
+	memcpy(light.guiInfo.angleFalloff, angleFalloff, sizeof(float[4]));
+
+	light.UpdateLightWithGUIInfo();
+	sLights[id] = light;
+}
+
+
 
 void LightManager::WriteLightDataToFile(string filePath) //public
 {
@@ -119,6 +161,13 @@ void LightManager::WriteLightDataToFile(string filePath) //public
 		string id = it->first;
 		PointLight* l = &(it->second);
 		myWriteFile << "P/" << id << ":" << l->ToString() << endl;
+	}
+	myWriteFile << "#SpotLights:{ambient},{diffuse},{specular},{position},{direction},{attFactors.xyz, range},{halfAngle, falloffExponent, -}\n";
+	for (auto it = sLights.begin(); it != sLights.end(); it++)
+	{
+		string id = it->first;
+		SpotLight* l = &(it->second);
+		myWriteFile << "S/" << id << ":" << l->ToString() << endl;
 	}
 	//add support for pointlights, spot lights
 	myWriteFile.close();

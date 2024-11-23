@@ -31,6 +31,7 @@ private:
 	{
 		DirectionalLight::DirLightInfo dirLights[DIR_LIGHT_COUNT];
 		PointLight::PointLightInfo pLights[POINT_LIGHT_COUNT];
+		SpotLight::SpotLightInfo sLights[SPOT_LIGHT_COUNT];
 	};
 
 public:	

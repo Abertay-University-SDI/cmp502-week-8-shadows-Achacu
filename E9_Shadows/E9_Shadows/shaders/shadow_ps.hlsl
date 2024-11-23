@@ -64,6 +64,17 @@ float4 main(InputType input) : SV_TARGET
         finalLightColor += calculateLightingPoint(lightVector, normal, pLight.diffuse, totalAtt);                
         finalSpecularColor += calculateSpecular(normalize(lightVector), normal, viewDir, pLight.specular.rgb, pLight.specular.a, totalAtt);
     }
+    SpotLight sLight;
+    for (i = 0; i < SPOT_LIGHT_COUNT; i++)
+    {
+        sLight = sLights[i];
+        lightVector = sLight.position.xyz - input.worldPosition;
+        //totalAtt = calculateAttenuation(length(lightVector), sLight.attenuation);
+        
+        finalLightColor += sLight.ambient;
+        finalLightColor += calculateLightingSpot(sLight.lightDir.xyz, lightVector, normal, sLight.diffuse, sLight.angleFalloff.xy);
+        //finalSpecularColor += calculateSpecular(normalize(lightVector), normal, viewDir, sLight.specular.rgb, sLight.specular.a, totalAtt);
+    }
     finalColor = textureColor * finalLightColor + finalSpecularColor;
     return finalColor;
 }

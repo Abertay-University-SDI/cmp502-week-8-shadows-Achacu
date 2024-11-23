@@ -179,10 +179,23 @@ void App1::finalPass()
 
 	//Render light debug cubes
 	cube->sendData(renderer->getDeviceContext());
+	XMMATRIX debugScale = XMMatrixScaling(0.1, 0.1, 0.1);
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
 	{
 		worldMatrix = (it->second).GetWorldMatrix();
-		textureShader->setShaderParameters(renderer->getDeviceContext(), XMMatrixScaling(0.1,0.1,0.1)*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
+	}
+	for (auto it = lightManager->GetPointLightsBegin(); it != lightManager->GetPointLightsEnd(); it++)
+	{
+		worldMatrix = (it->second).GetWorldMatrix();
+		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
+	}
+	for (auto it = lightManager->GetSpotLightsBegin(); it != lightManager->GetSpotLightsEnd(); it++)
+	{
+		worldMatrix = (it->second).GetWorldMatrix();
+		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
 		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
 
@@ -275,6 +288,38 @@ void App1::gui()
 				ImGui::DragFloat3(attStr.c_str(), pLight->guiInfo.attenuation, 0.01, 0, 1) ||
 				ImGui::DragFloat(rangeStr.c_str(), &pLight->guiInfo.attenuation[3], 0.1, 0, 30))
 				pLight->UpdateLightWithGUIInfo();
+		}
+	}
+	SpotLight* sLight;
+	string halfAngleStr, fallOffExpStr;
+	for (auto it = lightManager->GetSpotLightsBegin(); it != lightManager->GetSpotLightsEnd(); it++)
+	{
+		string id = it->first;
+		sLight = &(it->second);
+
+		ambientStr = "AmbientP" + id;
+		diffuseStr = "DiffuseP" + id;
+		specColStr = "SpecColP" + id;
+		specPowStr = "SpecPowP" + id;
+		posStr = "PosP" + id;
+		dirStr = "DirP" + id;
+		attStr = "AttP" + id;
+		halfAngleStr = "HalfAngleP" + id;
+		fallOffExpStr = "FalloffExpP" + id;
+
+		if (ImGui::CollapsingHeader(id.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
+		{
+
+			if (ImGui::ColorEdit3(ambientStr.c_str(), sLight->guiInfo.ambient, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+				ImGui::ColorEdit3(diffuseStr.c_str(), sLight->guiInfo.diffuse, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+				ImGui::ColorEdit3(specColStr.c_str(), sLight->guiInfo.specular, ImGuiColorEditFlags_::ImGuiColorEditFlags_Float) ||
+				ImGui::DragFloat(specPowStr.c_str(), &sLight->guiInfo.specular[3], 1, 1, 64) ||
+				ImGui::DragFloat3(posStr.c_str(), sLight->guiInfo.position, 0.1, -100, 100) ||
+				ImGui::DragFloat3(dirStr.c_str(), sLight->guiInfo.direction, 0.1, -1, 1) ||
+				ImGui::DragFloat3(attStr.c_str(), sLight->guiInfo.attenuation, 0.01, 0, 1) ||
+				ImGui::SliderAngle(halfAngleStr.c_str(), &sLight->guiInfo.angleFalloff[0], 0, 90) ||
+				ImGui::DragFloat(fallOffExpStr.c_str(), &sLight->guiInfo.angleFalloff[1], 0.1, 1, 30))
+				sLight->UpdateLightWithGUIInfo();
 		}
 	}
 	if (ImGui::Button("Save light info")) {
