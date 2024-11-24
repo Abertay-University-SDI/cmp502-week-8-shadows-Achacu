@@ -176,6 +176,7 @@ void LightManager::InitializeLights(ID3D11Device* renderer)
 {
 	InitializeDirLights(renderer);		
 	InitializeSpotLights(renderer);		
+	InitializePointLights(renderer);		
 }
 void LightManager::InitializeDirLights(ID3D11Device* renderer)
 {
@@ -253,6 +254,46 @@ void LightManager::InitializeSpotLights(ID3D11Device* renderer)
 
 		sLight->shadowMap = new ShadowMap(renderer, shadowmapWidth, shadowmapHeight, sShadowMaps, i);
 		sLight->generatePerspectiveMatrix();
+	}
+}
+void LightManager::InitializePointLights(ID3D11Device* renderer)
+{
+	//Create Texture2DArray for directional shadow maps
+	D3D11_TEXTURE2D_DESC texDesc;
+	texDesc.Width = shadowmapWidth;
+	texDesc.Height = shadowmapHeight;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = POINT_LIGHT_COUNT * 6;
+	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; //24-bit (0->1) red channel, 8-bit typeless green channel
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; //needed for shadow maps
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
+	renderer->CreateTexture2D(&texDesc, 0, &pShadowMaps);
+
+	//Create view to access the shadow map Texture2DArray
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; //24-bit (0->1) red channel, 8-bit unused and typeless alpha channel  
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+	//srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.Texture2DArray.MipLevels = texDesc.MipLevels;
+	srvDesc.Texture2DArray.MostDetailedMip = 0;
+	srvDesc.Texture2DArray.ArraySize = texDesc.ArraySize;
+	srvDesc.Texture2DArray.FirstArraySlice = 0;
+	renderer->CreateShaderResourceView(pShadowMaps, &srvDesc, &pShadowMapsSRV);
+
+	//Initialize shadow map and projection matrix
+	PointLight* pLight;
+	int i = 0;
+	for (auto it = pLights.begin(); it != pLights.end(); it++, i++)
+	{
+		string id = it->first;
+		pLight = &(it->second);
+
+		for(int s = 0; s < 6; s++)
+			pLight->shadowMaps[s] = new ShadowMap(renderer, shadowmapWidth, shadowmapHeight, pShadowMaps, i+s);
 	}
 }
 

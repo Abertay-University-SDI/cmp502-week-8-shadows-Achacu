@@ -68,6 +68,16 @@ ShadowMap::ShadowMap(ID3D11Device* device, int mWidth, int mHeight, ID3D11Textur
 	
 	//NULL render target
 	renderTargets[1] = { 0 };
+
+	////DEBUG SRV
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; //24-bit (0->1) red channel, 8-bit unused and typeless alpha channel  
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2DArray.ArraySize = 1;
+	srvDesc.Texture2DArray.FirstArraySlice = arrayIndex;
+	device->CreateShaderResourceView(texArray, &srvDesc, &mDepthMapSRV);
 }
 
 

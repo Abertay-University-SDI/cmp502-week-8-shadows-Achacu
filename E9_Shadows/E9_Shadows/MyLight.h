@@ -99,7 +99,9 @@ public:
 		info = PointLightInfo();
 		guiInfo = ImGuiPointLightInfo();
 	}
-	void generateViewMatrix();		///< Generates and upto date view matrix, based on current rotation
+	void generateViewMatrix(int shadowFaceIndex);		///< Generates and upto date view matrix, based on current rotation
+	void generatePerspectiveMatrix();
+
 
 	XMMATRIX GetWorldMatrix();
 
@@ -129,7 +131,7 @@ public:
 
 	ImGuiPointLightInfo guiInfo;
 	PointLightInfo info;
-	ShadowMap* shadowMap;
+	ShadowMap* shadowMaps[6];
 };
 class SpotLight : public MyLight
 {

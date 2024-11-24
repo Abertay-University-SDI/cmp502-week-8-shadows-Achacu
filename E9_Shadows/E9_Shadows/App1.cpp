@@ -19,6 +19,8 @@ float lightDir[3] = { 0.0f, -0.7f, 0.7f };
 float sceneCenter[3] = { 0.0f, 0.0f, 0.0f };
 float lightDstFromCenter = 10.0;
 
+int pointLightShadowMapIndex = 0;
+
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
 	
@@ -96,6 +98,10 @@ bool App1::render()
 	{
 		depthPass(&(it->second));
 	}
+	for (auto it = lightManager->GetPointLightsBegin(); it != lightManager->GetPointLightsEnd(); it++)
+	{
+		depthPass(&(it->second));
+	}
 	// Render scene
 	finalPass();
 
@@ -113,6 +119,18 @@ void App1::depthPass(SpotLight* sLight)
 	sLight->generateViewMatrix();
 	sLight->generatePerspectiveMatrix();
 	depthPass(sLight->getViewMatrix(), sLight->getPerspectiveMatrix());
+}
+void App1::depthPass(PointLight* pLight)
+{
+	pLight->generatePerspectiveMatrix();
+
+	for (int i = 0; i < 6; i++)
+	{
+		pLight->shadowMaps[i]->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
+		pLight->generateViewMatrix(i);
+		depthPass(pLight->getViewMatrix(), pLight->getPerspectiveMatrix());
+	}
+
 }
 void App1::depthPass(XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix)
 {	
@@ -154,10 +172,13 @@ void App1::finalPass()
 	renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
 	camera->update();
 
+	//PointLight* pLight = &lightManager->GetPointLightsBegin()->second;
+	//pLight->generateViewMatrix(2);
+	//pLight->generatePerspectiveMatrix();
 	// get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
-	XMMATRIX viewMatrix = camera->getViewMatrix();
-	XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
+	XMMATRIX viewMatrix = /*pLight->getViewMatrix();*/camera->getViewMatrix();
+	XMMATRIX projectionMatrix = /*pLight->getProjectionMatrix();*/renderer->getProjectionMatrix();
 	
 
 	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
@@ -211,7 +232,8 @@ void App1::finalPass()
 
 	renderer->setZBuffer(false);
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), lightManager->sShadowMapsSRV/*lightManager->GetDirLightsBegin()->second.shadowMap->getDepthMapSRV()*/);
+	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), 
+		/*lightManager->pShadowMapsSRV*/lightManager->GetPointLightsBegin()->second.shadowMaps[pointLightShadowMapIndex]->getDepthMapSRV());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -234,6 +256,8 @@ void App1::gui()
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 
+	ImGui::Text("PointShadowmapIndex");
+	ImGui::DragInt("PointShadowmapIndex", &pointLightShadowMapIndex, 0.1, 0, 5);
 	ImGui::Text("Cube");
 	ImGui::DragFloat3("PositionCube", cubePos, 0.1f, -50, 50);
 	ImGui::Text("Sphere");

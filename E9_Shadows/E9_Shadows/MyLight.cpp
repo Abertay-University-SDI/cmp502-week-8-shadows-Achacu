@@ -85,6 +85,7 @@ string DirectionalLight::ToString() {
 }
 
 
+
 XMMATRIX PointLight::GetWorldMatrix() { return XMMatrixTranslation(info.position.x, info.position.y, info.position.z); }
 string PointLight::ToString()
 {
@@ -93,6 +94,64 @@ string PointLight::ToString()
 	s += Float4ToStr(guiInfo.attenuation);
 	return s;
 }
+void PointLight::generateViewMatrix(int shadowFaceIndex)
+{
+	XMVECTOR dir;
+	switch (shadowFaceIndex)
+	{
+		case 0:
+			// right
+			dir = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0);
+			break;
+		case 1:
+			// left
+			dir = XMVectorSet(-1.0f, 0.0f, 0.0f, 1.0);
+			break;
+		case 2:
+			// up
+			dir = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0);
+			break;
+		case 3:
+			// down
+			dir = XMVectorSet(0.0f, -1.0f, 0.0f, 1.0);
+			break;
+		case 4:
+			// front
+			dir = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0);
+			break;
+		case 5:
+			// back 
+			dir = XMVectorSet(0.0f, 0.0f, -1.0f, 1.0);
+			break;
+	}
+	XMVECTOR up;
+	switch (shadowFaceIndex)
+	{
+		case 0:
+		case 1:
+		case 4:
+		case 5:
+			up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+			break;
+		case 2:
+			up = XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f);
+			break;
+		case 3:
+			up = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f);
+			break;
+	}
+
+	// Create the view matrix from the three vectors.
+	XMVECTOR position = XMLoadFloat3(&XMFLOAT3(info.position.x, info.position.y, info.position.z));
+	viewMatrix = XMMatrixLookToLH(position, dir, up);
+}
+
+void PointLight::generatePerspectiveMatrix()
+{
+	//Increasing near plane improves precision from afar. Far plane is adjusted to fit pointlight's range. FOV is set at 90º deg.
+	MyLight::generatePerspectiveMatrix(.5f, guiInfo.attenuation[3] * 1.1f, 1.570796f, 1);
+}
+
 
 void SpotLight::generateViewMatrix()
 {

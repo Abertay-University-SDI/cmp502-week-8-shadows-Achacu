@@ -141,18 +141,18 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 		lightsPtr->dirLights[i] = dirLight->info;
 	}
 	int j = 0;
-	for (auto it = lightManager->GetPointLightsBegin(); it != lightManager->GetPointLightsEnd(); it++, j++)
-	{
-		PointLight* pLight = &(it->second);
-		lightsPtr->pLights[j] = pLight->info;
-	}
-	int k = 0;
-	for (auto it = lightManager->GetSpotLightsBegin(); it != lightManager->GetSpotLightsEnd(); it++, k++)
+	for (auto it = lightManager->GetSpotLightsBegin(); it != lightManager->GetSpotLightsEnd(); it++, j++)
 	{
 		SpotLight* sLight = &(it->second);
-		lightViews[i + k] = XMMatrixTranspose(sLight->getViewMatrix());
-		lightProjections[i + k] = XMMatrixTranspose(sLight->getProjectionMatrix());
-		lightsPtr->sLights[k] = sLight->info;
+		lightViews[i + j] = XMMatrixTranspose(sLight->getViewMatrix());
+		lightProjections[i + j] = XMMatrixTranspose(sLight->getProjectionMatrix());
+		lightsPtr->sLights[j] = sLight->info;
+	}
+	int k = 0;
+	for (auto it = lightManager->GetPointLightsBegin(); it != lightManager->GetPointLightsEnd(); it++, k++)
+	{
+		PointLight* pLight = &(it->second);
+		lightsPtr->pLights[k] = pLight->info;
 	}
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
@@ -174,5 +174,6 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
 	deviceContext->PSSetShaderResources(1, 1, &lightManager->dirShadowMapsSRV);
 	deviceContext->PSSetShaderResources(2, 1, &lightManager->sShadowMapsSRV);
+	deviceContext->PSSetShaderResources(3, 1, &lightManager->pShadowMapsSRV);
 }
 
