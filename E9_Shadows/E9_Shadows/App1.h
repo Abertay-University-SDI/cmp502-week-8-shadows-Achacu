@@ -22,6 +22,8 @@ public:
 protected:
 	bool render();
 	void depthPass(DirectionalLight* dirLight);
+	void depthPass(SpotLight* sLight);
+	void depthPass(XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix);
 	void finalPass();
 	void gui();
 

@@ -32,7 +32,7 @@ public:
 		info.specular = XMFLOAT4(guiInfo.specular);
 	}
 
-	void generatePerspectiveMatrix(float screenNear, float screenFar);			///< Generate project matrix based on current rotation and provided near & far plane
+	///< Generate project matrix based on current rotation and provided near & far plane
 	void generateOrthoMatrix(float screenWidth, float screenHeight, float nearD, float farD);		///< Generates orthographic matrix based on supplied screen dimensions and near & far plane.
 	virtual XMMATRIX getViewMatrix();			///< Get light view matrix for shadow mapping, returns XMMATRIX
 	XMMATRIX getProjectionMatrix();		///< Get light projection matrix for shadow mapping, returns XMMATRIX
@@ -40,6 +40,7 @@ public:
 	XMMATRIX getOrthoMatrix();			///< Get light orthographic matrix for shadow mapping, returns XMMATRIX
 
 protected:
+	void generatePerspectiveMatrix(float screenNear, float screenFar, float fovAngleY, float aspectRatio);
 	XMMATRIX viewMatrix;
 	XMMATRIX projectionMatrix;
 	XMMATRIX perspectiveMatrix;
@@ -139,6 +140,7 @@ public:
 		guiInfo = ImGuiSpotLightInfo();
 	}
 	void generateViewMatrix();		///< Generates and upto date view matrix, based on current rotation
+	void generatePerspectiveMatrix();
 
 	XMMATRIX GetWorldMatrix();
 

@@ -22,16 +22,10 @@ string MyLight::ToString(ImGuiLightInfo guiInfo) {
 }
 
 // Create a projection matrix for the (point) light source. Used in shadow mapping.
-void MyLight::generatePerspectiveMatrix(float screenNear, float screenFar)
+void MyLight::generatePerspectiveMatrix(float screenNear, float screenFar, float fovAngleY, float aspectRatio)
 {
-	float fieldOfView, screenAspect;
-
-	// Setup field of view and screen aspect for a square light source.
-	fieldOfView = (float)XM_PI / 2.0f;
-	screenAspect = 1.0f;
-
 	// Create the projection matrix for the light.
-	perspectiveMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenFar);
+	perspectiveMatrix = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, screenNear, screenFar);
 	projectionMatrix = perspectiveMatrix;
 }
 // Create orthomatrix for (directional) light source. Used in shadow mapping.
@@ -98,6 +92,33 @@ string PointLight::ToString()
 	s += "," + Float4ToStr(guiInfo.position) + ",";
 	s += Float4ToStr(guiInfo.attenuation);
 	return s;
+}
+
+void SpotLight::generateViewMatrix()
+{
+	XMFLOAT4& direction = info.direction;
+	// default up vector
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+	if (direction.y == 1 || (direction.x == 0 && direction.z == 0))
+	{
+		up = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0);
+	}
+	else if (direction.y == -1 || (direction.x == 0 && direction.z == 0))
+	{
+		up = XMVectorSet(0.0f, 0.0f, -1.0f, 1.0);
+	}
+
+	XMVECTOR dir = XMVectorSet(direction.x, direction.y, direction.z, 1.0f);
+	XMVECTOR right = XMVector3Cross(dir, up);
+	up = XMVector3Cross(right, dir);
+	// Create the view matrix from the three vectors.
+	XMVECTOR position = XMLoadFloat3(&XMFLOAT3(info.position.x, info.position.y, info.position.z));
+	viewMatrix = XMMatrixLookAtLH(position, position + dir, up);
+}
+
+void SpotLight::generatePerspectiveMatrix()
+{
+	MyLight::generatePerspectiveMatrix(0.1f, guiInfo.attenuation[3], guiInfo.angleFalloff[0], 1);
 }
 
 XMMATRIX SpotLight::GetWorldMatrix() { return XMMatrixTranslation(info.position.x, info.position.y, info.position.z); }

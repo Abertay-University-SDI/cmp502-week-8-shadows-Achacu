@@ -2,8 +2,9 @@
 #define POINT_LIGHT_COUNT 2
 #define SPOT_LIGHT_COUNT 2
 
-Texture2DArray<float> depthMapTextures : register(t1);
-//Texture2D depthMapTextures[DIR_LIGHT_COUNT] : register(t1);
+Texture2DArray<float> dirShadowMaps : register(t1);
+Texture2DArray<float> spotShadowMaps : register(t2);
+//Texture2D dirShadowMaps[DIR_LIGHT_COUNT] : register(t1);
 SamplerState shadowSampler : register(s1);
 
 struct DirectionalLight
@@ -68,11 +69,11 @@ bool hasDepthData(float2 uv)
     return true;
 }
 
-bool isInShadow(int lightIndex, float2 uv, float4 lightViewPosition, float bias)
+bool isInShadow(Texture2DArray<float> shadowMapArray, int lightIndex, float2 uv, float4 lightViewPosition, float bias)
 {
     // Sample the shadow map (get depth of geometry)
-    //float depthValue = depthMapTextures[lightIndex].Sample(shadowSampler, uv).r;
-    float depthValue = depthMapTextures.Sample(shadowSampler, float3(uv, lightIndex)).r;
+    //float depthValue = dirShadowMaps[lightIndex].Sample(shadowSampler, uv).r;
+    float depthValue = shadowMapArray.Sample(shadowSampler, float3(uv, lightIndex)).r;
 	// Calculate the depth from the light.
     float lightDepthValue = lightViewPosition.z / lightViewPosition.w;
     lightDepthValue -= bias;

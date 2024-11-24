@@ -8,7 +8,7 @@ App1::App1()
 
 }
 
-float cubePos[3] = { -5.f, 2.f, -5.f };
+float cubePos[3] = { -5.f, 2.f, 20.f };
 float spherePos[3] = { 15.f, 2.f, -5.f };
 float teapotPos[3] = { 5.f, 2.f, -5.f };
 float teapotRot[3] = { 0,0,0 };
@@ -92,46 +92,55 @@ bool App1::render()
 	{
 		depthPass(&(it->second));
 	}
+	for (auto it = lightManager->GetSpotLightsBegin(); it != lightManager->GetSpotLightsEnd(); it++)
+	{
+		depthPass(&(it->second));
+	}
 	// Render scene
 	finalPass();
 
 	return true;
 }
-
 void App1::depthPass(DirectionalLight* dirLight)
 {
-	// Set the render target to be the render to texture.
 	dirLight->shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
-
-	// get the world, view, and projection matrices from the camera and d3d objects.
 	dirLight->generateViewMatrix();
-	XMMATRIX lightViewMatrix = dirLight->getViewMatrix();
-	XMMATRIX lightProjectionMatrix = dirLight->getOrthoMatrix();
+	depthPass(dirLight->getViewMatrix(), dirLight->getOrthoMatrix());
+}
+void App1::depthPass(SpotLight* sLight)
+{
+	sLight->shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
+	sLight->generateViewMatrix();
+	sLight->generatePerspectiveMatrix();
+	depthPass(sLight->getViewMatrix(), sLight->getPerspectiveMatrix());
+}
+void App1::depthPass(XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix)
+{	
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
 	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
 	// Render floor
 	mesh->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix);
 	depthShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	//Render cube
 	worldMatrix = XMMatrixTranslation(cubePos[0], cubePos[1], cubePos[2]);
 	cube->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix);
 	depthShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
 	worldMatrix = XMMatrixTranslation(spherePos[0], spherePos[1], spherePos[2]);
 	sphere->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix);
 	depthShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 	worldMatrix = renderer->getWorldMatrix();
 	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
 	// Render model
 	model->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix);
 	depthShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 	// Set back buffer as render target and reset view port.
@@ -202,7 +211,7 @@ void App1::finalPass()
 
 	renderer->setZBuffer(false);
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), lightManager->dirShadowMapsSRV/*lightManager->GetDirLightsBegin()->second.shadowMap->getDepthMapSRV()*/);
+	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), lightManager->sShadowMapsSRV/*lightManager->GetDirLightsBegin()->second.shadowMap->getDepthMapSRV()*/);
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 

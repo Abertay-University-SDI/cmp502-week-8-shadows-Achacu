@@ -5,8 +5,8 @@ cbuffer MatrixBuffer : register(b0)
 	matrix worldMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
-    matrix lightViewMatrices[DIR_LIGHT_COUNT];
-	matrix lightProjectionMatrices[DIR_LIGHT_COUNT];
+    matrix lightViewMatrices[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT];
+    matrix lightProjectionMatrices[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT];
 };
 
 struct InputType
@@ -22,7 +22,7 @@ struct OutputType
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
 	float3 worldPosition : POSITION;
-    float4 lightViewPos[DIR_LIGHT_COUNT] : TEXCOORD1;
+    float4 lightViewPos[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT] : TEXCOORD1; //vertex position in light view space (light2Vertex distance can be computed from this)
 };
 
 
@@ -42,6 +42,11 @@ OutputType main(InputType input)
     {        
         lightViewPos = mul(worldPosition, lightViewMatrices[i]);
         output.lightViewPos[i] = mul(lightViewPos, lightProjectionMatrices[i]);
+    }
+    for (int j = 0; j < SPOT_LIGHT_COUNT; j++)
+    {
+        lightViewPos = mul(worldPosition, lightViewMatrices[i+j]);
+        output.lightViewPos[i+j] = mul(lightViewPos, lightProjectionMatrices[i+j]);
     }
 
     output.tex = input.tex;

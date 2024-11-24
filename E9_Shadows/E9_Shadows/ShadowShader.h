@@ -18,8 +18,8 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX projection;
-		XMMATRIX lightViews[DIR_LIGHT_COUNT];
-		XMMATRIX lightProjections[DIR_LIGHT_COUNT];
+		XMMATRIX lightViews[SHADOW_MAP_COUNT];
+		XMMATRIX lightProjections[SHADOW_MAP_COUNT];
 	};
 
 	struct CameraBufferType
