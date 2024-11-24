@@ -217,7 +217,7 @@ void LightManager::InitializeDirLights(ID3D11Device* renderer)
 	}
 }
 void LightManager::InitializeSpotLights(ID3D11Device* renderer)
-{
+{	
 	//Create Texture2DArray for directional shadow maps
 	D3D11_TEXTURE2D_DESC texDesc;
 	texDesc.Width = shadowmapWidth;

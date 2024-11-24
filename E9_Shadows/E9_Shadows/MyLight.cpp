@@ -118,7 +118,8 @@ void SpotLight::generateViewMatrix()
 
 void SpotLight::generatePerspectiveMatrix()
 {
-	MyLight::generatePerspectiveMatrix(0.1f, guiInfo.attenuation[3], guiInfo.angleFalloff[0], 1);
+	//Increasing near plane improves precision from afar. Far plane is adjusted to fit spotlight's range. FOV is adjusted to match twice the cutoff angle.
+	MyLight::generatePerspectiveMatrix(.5f, guiInfo.attenuation[3]*1.1f, guiInfo.angleFalloff[0]*2.1f, 1);
 }
 
 XMMATRIX SpotLight::GetWorldMatrix() { return XMMatrixTranslation(info.position.x, info.position.y, info.position.z); }

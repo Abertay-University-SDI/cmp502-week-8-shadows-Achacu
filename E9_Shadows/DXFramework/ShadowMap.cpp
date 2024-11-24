@@ -58,14 +58,14 @@ ShadowMap::ShadowMap(ID3D11Device* device, int mWidth, int mHeight, ID3D11Textur
 	dsvDesc.Texture2DArray.FirstArraySlice = arrayIndex;
 	device->CreateDepthStencilView(texArray, &dsvDesc, &mDepthMapDSV);
 
-	// Setup the viewport for rendering.
+	// Setup the viewport the shadow map will be rendered to.
 	viewport.Width = (float)mWidth;
-	viewport.Height = (float)mHeight;
+	viewport.Height =  (float)mHeight;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	viewport.TopLeftX = 0.0f;
 	viewport.TopLeftY = 0.0f;
-
+	
 	//NULL render target
 	renderTargets[1] = { 0 };
 }
