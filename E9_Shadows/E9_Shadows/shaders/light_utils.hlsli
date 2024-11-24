@@ -2,8 +2,8 @@
 #define POINT_LIGHT_COUNT 1
 #define SPOT_LIGHT_COUNT 2
 
-Texture2DArray<float> dirShadowMaps : register(t1);
-Texture2DArray<float> spotShadowMaps : register(t2);
+Texture2DArray dirShadowMaps : register(t1);
+Texture2DArray spotShadowMaps : register(t2);
 TextureCube/*Array<float>*/ pointShadowMaps : register(t3);
 
 //Texture2D dirShadowMaps[DIR_LIGHT_COUNT] : register(t1);
@@ -71,7 +71,7 @@ bool hasDepthData(float2 uv)
     return true;
 }
 
-bool isInShadow(Texture2DArray<float> shadowMapArray, int lightIndex, float2 uv, float4 lightViewPosition, float bias)
+bool isInShadow(Texture2DArray shadowMapArray, int lightIndex, float2 uv, float4 lightViewPosition, float bias)
 {
     // Sample the shadow map (get depth of geometry)
     //float depthValue = dirShadowMaps[lightIndex].Sample(shadowSampler, uv).r;
@@ -83,7 +83,7 @@ bool isInShadow(Texture2DArray<float> shadowMapArray, int lightIndex, float2 uv,
 	// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
     return (lightDepthValue > depthValue);
 }
-bool isInShadow(TextureCube/*Array<float>*/ shadowMapArray, int lightIndex, float3 lightVector, float bias)
+bool isInShadow(TextureCube/*Array*/ shadowMapArray, int lightIndex, float3 lightVector, float bias, float farDst)
 {
     // Sample the shadow map (get depth of geometry)
     float depthValue = shadowMapArray.Sample(shadowSampler, lightVector).r;

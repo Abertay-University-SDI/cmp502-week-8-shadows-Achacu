@@ -168,7 +168,6 @@
     <ClCompile Include="LightManager.cpp" />
     <ClCompile Include="MyLight.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="ShadowCubeMap.cpp" />
     <ClCompile Include="ShadowShader.cpp" />
     <ClCompile Include="TextureShader.cpp" />
   </ItemGroup>
@@ -177,7 +176,6 @@
     <ClInclude Include="DepthShader.h" />
     <ClInclude Include="LightManager.h" />
     <ClInclude Include="MyLight.h" />
-    <ClInclude Include="ShadowCubeMap.h" />
     <ClInclude Include="ShadowShader.h" />
     <ClInclude Include="TextureShader.h" />
   </ItemGroup>
@@ -187,6 +185,18 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="raw_depth_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="raw_depth_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\depth_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>

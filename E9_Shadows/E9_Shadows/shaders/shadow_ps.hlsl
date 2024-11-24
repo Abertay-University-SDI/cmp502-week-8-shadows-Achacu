@@ -97,7 +97,7 @@ float4 main(InputType input) : SV_TARGET
         lightVector = pLight.position.xyz - input.worldPosition;
         
         [flatten]
-        if (!isInShadow(pointShadowMaps, j, -lightVector, shadowMapBias))
+        if (!isInShadow(pointShadowMaps, j, -lightVector, shadowMapBias, pLight.attenuation.w))
         {
             attFactor = calculateAttenuation(length(lightVector), pLight.attenuation);
         

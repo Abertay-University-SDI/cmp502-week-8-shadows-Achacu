@@ -149,7 +149,7 @@ void PointLight::generateViewMatrix(int shadowFaceIndex)
 void PointLight::generatePerspectiveMatrix()
 {
 	//Increasing near plane improves precision from afar. Far plane is adjusted to fit pointlight's range. FOV is set at 90º deg.
-	MyLight::generatePerspectiveMatrix(.5f, guiInfo.attenuation[3] * 1.1f, 1.570796f, 1);
+	MyLight::generatePerspectiveMatrix(.5f, guiInfo.attenuation[3], 1.570796f, 1);
 }
 
 

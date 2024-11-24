@@ -270,18 +270,18 @@ void LightManager::InitializePointLights(ID3D11Device* renderer)
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
 	texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; //needed for shadow maps
 	texDesc.CPUAccessFlags = 0;
-	texDesc.MiscFlags = 0;
+	texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE; //IMPORTANT
 	renderer->CreateTexture2D(&texDesc, 0, &pShadowMaps);
 
 	//Create view to access the shadow map Texture2DArray
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; //24-bit (0->1) red channel, 8-bit unused and typeless alpha channel  
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-	//srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-	srvDesc.Texture2DArray.MipLevels = texDesc.MipLevels;
-	srvDesc.Texture2DArray.MostDetailedMip = 0;
-	srvDesc.Texture2DArray.ArraySize = texDesc.ArraySize;
-	srvDesc.Texture2DArray.FirstArraySlice = 0;
+	//srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.Texture2D.MipLevels = texDesc.MipLevels;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	//srvDesc.Texture2DArray.ArraySize = texDesc.ArraySize;
+	//srvDesc.Texture2DArray.FirstArraySlice = 0;
 	renderer->CreateShaderResourceView(pShadowMaps, &srvDesc, &pShadowMapsSRV);
 
 	//Initialize shadow map and projection matrix
