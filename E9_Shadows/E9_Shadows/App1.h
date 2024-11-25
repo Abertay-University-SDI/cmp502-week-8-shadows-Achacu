@@ -24,7 +24,7 @@ protected:
 	void depthPass(DirectionalLight* dirLight);
 	void depthPass(SpotLight* sLight);
 	void depthPass(PointLight* pLight);
-	void depthPass(XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix);
+	void depthPass(/*XMFLOAT3 lightPos, float range,*/ XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix);
 	void finalPass();
 	void gui();
 

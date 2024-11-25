@@ -43,9 +43,20 @@ void DepthShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	matrixBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
 
+
+	//// Setup light buffer
+	//D3D11_BUFFER_DESC lightBufferDesc;
+	//lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	//lightBufferDesc.ByteWidth = sizeof(LightBufferType);
+	//lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	//lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	//lightBufferDesc.MiscFlags = 0;
+	//lightBufferDesc.StructureByteStride = 0;
+	//renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
+
 }
 
-void DepthShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix)
+void DepthShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix/*, XMFLOAT3 lightPos, float lightRange*/)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -63,4 +74,11 @@ void DepthShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	dataPtr->projection = tproj;
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
+
+	//deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	//LightBufferType* dataPtr2 = (LightBufferType*)mappedResource.pData;
+	//dataPtr2->lightPos = lightPos;// worldMatrix;
+	//dataPtr2->range = lightRange;
+	//deviceContext->Unmap(lightBuffer, 0);
+	//deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 }

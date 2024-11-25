@@ -24,6 +24,7 @@ OutputType main(InputType input)
 
     // Calculate the position of the vertex against the world, view, and projection matrices.
     output.position = mul(input.position, worldMatrix);
+    //output.depthPosition = output.position; //world pos
     output.position = mul(output.position, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
 

@@ -40,7 +40,6 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_SAMPLER_DESC shadowSamplerDesc;
-	D3D11_BUFFER_DESC lightBufferDesc;
 	D3D11_BUFFER_DESC cameraBufferDesc;
 
 	// Load (+ compile) shader files
@@ -93,6 +92,7 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	renderer->CreateBuffer(&cameraBufferDesc, NULL, &cameraBuffer);
 
 	// Setup light buffer
+	D3D11_BUFFER_DESC lightBufferDesc;
 	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
 	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;

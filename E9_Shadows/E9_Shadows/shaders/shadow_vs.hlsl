@@ -34,6 +34,7 @@ OutputType main(InputType input)
     float4 worldPosition = mul(input.position, worldMatrix);
     output.worldPosition = worldPosition.xyz;
     output.position = mul(worldPosition, viewMatrix);
+    //float3 viewPos = output.position.xyz;
     output.position = mul(output.position, projectionMatrix);
     
 	// Calculate the position of the vertice as viewed by the light source.
@@ -50,8 +51,9 @@ OutputType main(InputType input)
     }
 
     output.tex = input.tex;
-    output.normal = mul(input.normal, (float3x3)worldMatrix);
+    output.normal = mul(input.normal, (float3x3) worldMatrix);
     output.normal = normalize(output.normal);
     
+    //output.position.z = length(viewPos) * output.position.w / 30.0f;
 	return output;
 }

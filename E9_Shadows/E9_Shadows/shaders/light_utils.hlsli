@@ -89,7 +89,7 @@ bool isInShadow(TextureCube/*Array*/ shadowMapArray, int lightIndex, float3 ligh
     float depthValue = shadowMapArray.Sample(shadowSampler, lightVector).r;
     //float depthValue = shadowMapArray.Sample(shadowSampler, float4(lightVector, lightIndex)).r;
 	// Calculate the depth from the light.
-    float lightDepthValue = length(lightVector);
+    float lightDepthValue = length(lightVector) / farDst;
     lightDepthValue -= bias;
     
 	// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.

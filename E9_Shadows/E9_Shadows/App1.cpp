@@ -128,37 +128,37 @@ void App1::depthPass(PointLight* pLight)
 	{
 		pLight->shadowMaps[i]->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
 		pLight->generateViewMatrix(i);
-		depthPass(pLight->getViewMatrix(), pLight->getPerspectiveMatrix());
+		depthPass(/*XMFLOAT3(pLight->guiInfo.position), pLight->guiInfo.attenuation[3],*/ pLight->getViewMatrix(), pLight->getPerspectiveMatrix());
 	}
 
 }
-void App1::depthPass(XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix)
+void App1::depthPass(/*XMFLOAT3 lightPos, float range,*/ XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix)
 {	
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
 	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
 	// Render floor
 	mesh->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
 	depthShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	//Render cube
 	worldMatrix = XMMatrixTranslation(cubePos[0], cubePos[1], cubePos[2]);
 	cube->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
 	depthShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
 	worldMatrix = XMMatrixTranslation(spherePos[0], spherePos[1], spherePos[2]);
 	sphere->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
 	depthShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 	worldMatrix = renderer->getWorldMatrix();
 	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
 	// Render model
 	model->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
 	depthShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 	// Set back buffer as render target and reset view port.
