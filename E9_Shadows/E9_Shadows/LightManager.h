@@ -6,7 +6,7 @@
 #include "MyLight.h"
 
 #define DIR_LIGHT_COUNT 3
-#define POINT_LIGHT_COUNT 1
+#define POINT_LIGHT_COUNT 2
 #define SPOT_LIGHT_COUNT 2
 
 #define SHADOW_MAP_COUNT (DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT) //parenthesis are important

@@ -277,11 +277,11 @@ void LightManager::InitializePointLights(ID3D11Device* renderer)
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; //24-bit (0->1) red channel, 8-bit unused and typeless alpha channel  
 	//srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBEARRAY;
 	srvDesc.Texture2D.MipLevels = texDesc.MipLevels;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	//srvDesc.Texture2DArray.ArraySize = texDesc.ArraySize;
-	//srvDesc.Texture2DArray.FirstArraySlice = 0;
+	srvDesc.TextureCubeArray.NumCubes = POINT_LIGHT_COUNT;
+	srvDesc.TextureCubeArray.First2DArrayFace = 0;
 	renderer->CreateShaderResourceView(pShadowMaps, &srvDesc, &pShadowMapsSRV);
 
 	//Initialize shadow map and projection matrix
@@ -293,7 +293,7 @@ void LightManager::InitializePointLights(ID3D11Device* renderer)
 		pLight = &(it->second);
 
 		for(int s = 0; s < 6; s++)
-			pLight->shadowMaps[s] = new ShadowMap(renderer, shadowmapWidth, shadowmapHeight, pShadowMaps, i+s);
+			pLight->shadowMaps[s] = new ShadowMap(renderer, shadowmapWidth, shadowmapHeight, pShadowMaps, 6*i+s);
 	}
 }
 

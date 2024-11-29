@@ -157,7 +157,7 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 		for (int v = 0; v < 6; v++)
 		{
 			pLight->generateViewMatrix(v);
-			lightsPtr->pLightViews[k + v] = XMMatrixTranspose(pLight->getViewMatrix());
+			lightsPtr->pLightViews[6*k + v] = XMMatrixTranspose(pLight->getViewMatrix());
 		}
 
 		lightsPtr->pLightProjections[k] = XMMatrixTranspose(pLight->getProjectionMatrix());
