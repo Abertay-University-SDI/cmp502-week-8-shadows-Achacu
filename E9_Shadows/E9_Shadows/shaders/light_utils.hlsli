@@ -25,6 +25,15 @@ struct PointLight
     float4 position;
     float4 attenuation;
 };
+static const float3 pointLightDirections[6] =
+{
+    float3(1.0f, 0.0f, 0.0f),			
+    float3(-1.0f, 0.0f, 0.0f),			
+    float3(0.0f, 1.0f, 0.0f),			
+    float3(0.0f, -1.0f, 0.0f),			
+    float3(0.0f, 0.0f, 1.0f),			
+    float3(0.0f, 0.0f, -1.0f)
+};
 struct SpotLight
 {
     float4 ambient;
@@ -41,6 +50,8 @@ cbuffer LightBuffer : register(b0)
     DirectionalLight dirLights[DIR_LIGHT_COUNT];
     PointLight pLights[POINT_LIGHT_COUNT];
     SpotLight sLights[SPOT_LIGHT_COUNT];
+    matrix pLightViews[6 * POINT_LIGHT_COUNT];
+    matrix pLightProjections[POINT_LIGHT_COUNT];
 };
 
 
@@ -83,13 +94,29 @@ bool isInShadow(Texture2DArray shadowMapArray, int lightIndex, float2 uv, float4
 	// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
     return (lightDepthValue > depthValue);
 }
-bool isInShadow(TextureCube/*Array*/ shadowMapArray, int lightIndex, float3 lightVector, float bias, float farDst)
+bool isInShadow(TextureCube/*Array*/ shadowMapArray, int lightIndex, float3 pixelWorldPos, float3 lightVector, float bias)
 {
     // Sample the shadow map (get depth of geometry)
     float depthValue = shadowMapArray.Sample(shadowSampler, lightVector).r;
+    
+    int maxDotIndex = 0;
+    float currentDot, maxDot = 0;
+    [unroll]
+    for (int i = 0; i < 6; i++)
+    {
+        currentDot = dot(lightVector, pointLightDirections[i]);
+        [flatten]
+        if (currentDot > maxDot)
+        {
+            maxDot = currentDot;
+            maxDotIndex = i;
+        }
+    }
+    float4 pixelSeenFromLight = mul(mul(float4(pixelWorldPos, 1), pLightViews[6 * lightIndex + maxDotIndex]), pLightProjections[lightIndex]);
+    
     //float depthValue = shadowMapArray.Sample(shadowSampler, float4(lightVector, lightIndex)).r;
 	// Calculate the depth from the light.
-    float lightDepthValue = length(lightVector) / farDst;
+    float lightDepthValue = pixelSeenFromLight.z / pixelSeenFromLight.w;
     lightDepthValue -= bias;
     
 	// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.

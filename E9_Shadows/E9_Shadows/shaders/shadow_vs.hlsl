@@ -49,11 +49,10 @@ OutputType main(InputType input)
         lightViewPos = mul(worldPosition, lightViewMatrices[i+j]);
         output.lightViewPos[i+j] = mul(lightViewPos, lightProjectionMatrices[i+j]);
     }
-
+    
     output.tex = input.tex;
     output.normal = mul(input.normal, (float3x3) worldMatrix);
     output.normal = normalize(output.normal);
     
-    //output.position.z = length(viewPos) * output.position.w / 30.0f;
 	return output;
 }

@@ -153,6 +153,14 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	{
 		PointLight* pLight = &(it->second);
 		lightsPtr->pLights[k] = pLight->info;
+
+		for (int v = 0; v < 6; v++)
+		{
+			pLight->generateViewMatrix(v);
+			lightsPtr->pLightViews[k + v] = XMMatrixTranspose(pLight->getViewMatrix());
+		}
+
+		lightsPtr->pLightProjections[k] = XMMatrixTranspose(pLight->getProjectionMatrix());
 	}
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
