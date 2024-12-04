@@ -9,6 +9,8 @@
 #include "ShadersC++/DepthShader.h"
 
 #include "Utility/LightManager.h"
+#include "Utility/TransformManager.h"
+
 
 class App1 : public BaseApplication
 {
@@ -29,7 +31,13 @@ protected:
 	void finalPass();
 	void gui();
 
+	void TransformsGUI();
+
+	void LightGUI();
+
 private:
+	TransformManager* tManager;
+
 	TextureShader* textureShader;
 	PlaneMesh* mesh;
 	CubeMesh* cube;

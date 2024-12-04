@@ -8,7 +8,6 @@ App1::App1()
 
 }
 
-float cubePos[3] = { -5.f, 2.f, 20.f };
 float spherePos[3] = { 15.f, 2.f, -5.f };
 float teapotPos[3] = { 5.f, 2.f, -5.f };
 float teapotRot[3] = { 0,0,0 };
@@ -51,6 +50,9 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	lightManager->ReadLightDataFromFile("Utility/lightInfo.txt");
 	lightManager->InitializeLights(renderer->getDevice());
 
+	//Reads transform info from file and creates transforms
+	tManager = new TransformManager();
+	tManager->ReadTransformDataFromFile("Utility/transformData.txt");
 
 	//lightManager->AddDirectionalLight("light1", new float[4] {0, 0, 0, 1}, new float[4] {1, 1, 0, 1}, new float[4] {0, 0, 0, 0},new float[4] {2, 5, 5, 10}, new float[4] {-0.7, -0.7, 0, 0});
 	//lightManager->AddDirectionalLight("light2", new float[4] {0, 0.234, 0, 1}, new float[4] {1, 1, 1, 1}, new float[4] {0, 0, 1, 0.2},new float[4] {2, 3, 4, 20}, new float[4] {-0.7, 0.7, 0.7, 0});
@@ -143,9 +145,8 @@ void App1::depthPass(/*XMFLOAT3 lightPos, float range,*/ XMMATRIX lightViewMatri
 	depthShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	//Render cube
-	worldMatrix = XMMatrixTranslation(cubePos[0], cubePos[1], cubePos[2]);
 	cube->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("cube"), lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
 	depthShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
@@ -196,9 +197,8 @@ void App1::finalPass()
 	shadowShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 	//Render cube
-	worldMatrix = XMMatrixTranslation(cubePos[0], cubePos[1], cubePos[2]);
 	cube->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), lightManager, camera);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("cube"), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), lightManager, camera);
 	shadowShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
@@ -230,12 +230,12 @@ void App1::finalPass()
 	}
 
 
-	//renderer->setZBuffer(false);
-	//orthoMesh->sendData(renderer->getDeviceContext());
-	//textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), 
-	//	/*lightManager->pShadowMapsSRV*/lightManager->GetPointLightsBegin()->second.shadowMaps[pointLightShadowMapIndex]->getDepthMapSRV());
-	//textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
-	//renderer->setZBuffer(true);
+	renderer->setZBuffer(false);
+	orthoMesh->sendData(renderer->getDeviceContext());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), 
+		/*lightManager->pShadowMapsSRV*/lightManager->GetPointLightsBegin()->second.shadowMaps[pointLightShadowMapIndex]->getDepthMapSRV());
+	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	renderer->setZBuffer(true);
 
 	gui();
 	renderer->endScene();
@@ -258,8 +258,6 @@ void App1::gui()
 
 	ImGui::Text("PointShadowmapIndex");
 	ImGui::DragInt("PointShadowmapIndex", &pointLightShadowMapIndex, 0.1, 0, 5);
-	ImGui::Text("Cube");
-	ImGui::DragFloat3("PositionCube", cubePos, 0.1f, -50, 50);
 	ImGui::Text("Sphere");
 	ImGui::DragFloat3("PositionSphere", spherePos, 0.1f, -50, 50);
 	ImGui::Text("Teapot");
@@ -267,12 +265,46 @@ void App1::gui()
 	ImGui::SliderFloat3("RotationTeapot", teapotRot, -3.14, 3.14);
 	ImGui::SliderFloat3("ScaleTeapot", teapotScale, 0, 3);
 
+	LightGUI();
+	
+	TransformsGUI();
+
+	// Render UI
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+
+void App1::TransformsGUI()
+{
+	//display all transform controls
+	for (auto it = tManager->GetBegin(); it != tManager->GetEnd(); it++)
+	{
+		string id = it->first;
+		TransformManager::Transform* t = &(it->second);
+		string posName = id + "Position";
+		string rotName = id + "Rotation";
+		string scaleName = id + "Scale";
+
+
+		if (ImGui::CollapsingHeader(id.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
+		{
+			ImGui::DragFloat3(posName.c_str(), t->position, 0.1f, -50, 50);
+			ImGui::SliderFloat3(rotName.c_str(), t->rotation, -3.14, 3.14);
+			ImGui::DragFloat3(scaleName.c_str(), t->scale, 0.1f, -1, 50);
+		}
+	}
+	if (ImGui::Button("Save transforms"))
+		tManager->WriteTransformDataToFile("Utility/transformData.txt");
+}
+
+void App1::LightGUI()
+{
 	string ambientStr, diffuseStr, specColStr, specPowStr, dirStr, pivotStr, dstFromPivotStr;
 	DirectionalLight* dirLight;
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
 	{
 		string id = it->first;
-		dirLight = &(it->second);		
+		dirLight = &(it->second);
 
 		ambientStr = "AmbientD" + id;
 		diffuseStr = "DiffuseD" + id;
@@ -281,7 +313,7 @@ void App1::gui()
 		dirStr = "DirD" + id;
 		pivotStr = "PivotD" + id;
 		dstFromPivotStr = "DstFromPivotD" + id;
-		
+
 		if (ImGui::CollapsingHeader(id.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
 		{
 
@@ -293,7 +325,7 @@ void App1::gui()
 				ImGui::DragFloat(dstFromPivotStr.c_str(), &dirLight->guiInfo.pivot[3], 0.1, 0, 30) ||
 				ImGui::DragFloat3(dirStr.c_str(), dirLight->guiInfo.direction, 0.1, -1, 1))
 				dirLight->UpdateLightWithGUIInfo();
-		}		
+		}
 	}
 	PointLight* pLight;
 	string posStr, attStr, rangeStr;
@@ -357,13 +389,9 @@ void App1::gui()
 				sLight->UpdateLightWithGUIInfo();
 		}
 	}
-	if (ImGui::Button("Save light info")) {
-		lightManager->WriteLightDataToFile("lightInfo.txt");
+	if (ImGui::Button("Save light info"))
+	{
+		lightManager->WriteLightDataToFile("Utility/lightInfo.txt");
 	}
-	
-
-	// Render UI
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
 
