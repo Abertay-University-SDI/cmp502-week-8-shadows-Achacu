@@ -29,7 +29,7 @@ OutputType main(InputType input)
     output.position = mul(output.position, projectionMatrix);
     
 	// Calculate the position of the vertex as viewed and projected from each light source
-    calculateLightViewPositions(output.lightViewPos, worldPosition);
+    calculateLightViewPositions(worldPosition, output.lightViewPos);
     
     output.tex = input.tex;
     output.normal = mul(input.normal, (float3x3) worldMatrix);

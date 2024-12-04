@@ -1,7 +1,7 @@
 // Lab1.cpp
 // Lab 1 example, simple coloured triangle mesh
 #include "App1.h"
-#include "MyLight.h"
+#include "Utility/MyLight.h"
 
 App1::App1()
 {
@@ -48,7 +48,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	//Reads light info from file and creates lights
 	lightManager = new LightManager();
-	lightManager->ReadLightDataFromFile("lightInfo.txt");
+	lightManager->ReadLightDataFromFile("Utility/lightInfo.txt");
 	lightManager->InitializeLights(renderer->getDevice());
 
 
@@ -230,12 +230,12 @@ void App1::finalPass()
 	}
 
 
-	renderer->setZBuffer(false);
-	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), 
-		/*lightManager->pShadowMapsSRV*/lightManager->GetPointLightsBegin()->second.shadowMaps[pointLightShadowMapIndex]->getDepthMapSRV());
-	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
-	renderer->setZBuffer(true);
+	//renderer->setZBuffer(false);
+	//orthoMesh->sendData(renderer->getDeviceContext());
+	//textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), 
+	//	/*lightManager->pShadowMapsSRV*/lightManager->GetPointLightsBegin()->second.shadowMaps[pointLightShadowMapIndex]->getDepthMapSRV());
+	//textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	//renderer->setZBuffer(true);
 
 	gui();
 	renderer->endScene();

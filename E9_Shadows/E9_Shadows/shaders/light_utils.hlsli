@@ -142,7 +142,7 @@ float2 getProjectiveCoords(float4 lightViewPosition)
     projTex += float2(0.5f, 0.5f);
     return projTex;
 }
-void calculateLightViewPositions(out float4 lightViewPositions[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT], float4 worldPos)
+void calculateLightViewPositions(float4 worldPos, out float4 lightViewPositions[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT])
 {
     float4 lightViewPos;
     for (int i = 0; i < DIR_LIGHT_COUNT; i++)

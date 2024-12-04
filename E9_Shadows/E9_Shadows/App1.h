@@ -4,10 +4,11 @@
 
 // Includes
 #include "DXF.h"	// include dxframework
-#include "TextureShader.h"
-#include "ShadowShader.h"
-#include "DepthShader.h"
-#include "LightManager.h"
+#include "ShadersC++/TextureShader.h"
+#include "ShadersC++/ShadowShader.h"
+#include "ShadersC++/DepthShader.h"
+
+#include "Utility/LightManager.h"
 
 class App1 : public BaseApplication
 {
