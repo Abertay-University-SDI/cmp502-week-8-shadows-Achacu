@@ -1,13 +1,4 @@
-#include "light_utils.hlsli"
-
-cbuffer MatrixBuffer : register(b0)
-{
-	matrix worldMatrix;
-	matrix viewMatrix;
-	matrix projectionMatrix;
-    matrix lightViewMatrices[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT];
-    matrix lightProjectionMatrices[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT];
-};
+#include "light_utils.hlsli" //matrix buffer in b0
 
 struct InputType
 {
@@ -37,18 +28,8 @@ OutputType main(InputType input)
     //float3 viewPos = output.position.xyz;
     output.position = mul(output.position, projectionMatrix);
     
-	// Calculate the position of the vertice as viewed by the light source.
-    float4 lightViewPos;
-    for (int i = 0; i < DIR_LIGHT_COUNT; i++)
-    {        
-        lightViewPos = mul(worldPosition, lightViewMatrices[i]);
-        output.lightViewPos[i] = mul(lightViewPos, lightProjectionMatrices[i]);
-    }
-    for (int j = 0; j < SPOT_LIGHT_COUNT; j++)
-    {
-        lightViewPos = mul(worldPosition, lightViewMatrices[i+j]);
-        output.lightViewPos[i+j] = mul(lightViewPos, lightProjectionMatrices[i+j]);
-    }
+	// Calculate the position of the vertex as viewed and projected from each light source
+    calculateLightViewPositions(output.lightViewPos, worldPosition);
     
     output.tex = input.tex;
     output.normal = mul(input.normal, (float3x3) worldMatrix);

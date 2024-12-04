@@ -176,12 +176,14 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
+	//shadow maps
+	deviceContext->PSSetShaderResources(0, 1, &lightManager->dirShadowMapsSRV);
+	deviceContext->PSSetShaderResources(1, 1, &lightManager->sShadowMapsSRV);
+	deviceContext->PSSetShaderResources(2, 1, &lightManager->pShadowMapsSRV);
+	deviceContext->PSSetSamplers(0, 1, &sampleStateShadow);
+
 	// Set shader texture resource in the pixel shader.
-	deviceContext->PSSetShaderResources(0, 1, &texture);
-	deviceContext->PSSetSamplers(0, 1, &sampleState);
-	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
-	deviceContext->PSSetShaderResources(1, 1, &lightManager->dirShadowMapsSRV);
-	deviceContext->PSSetShaderResources(2, 1, &lightManager->sShadowMapsSRV);
-	deviceContext->PSSetShaderResources(3, 1, &lightManager->pShadowMapsSRV);
+	deviceContext->PSSetShaderResources(3, 1, &texture);
+	deviceContext->PSSetSamplers(1, 1, &sampleState);
 }
 
