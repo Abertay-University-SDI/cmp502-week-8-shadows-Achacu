@@ -10,6 +10,7 @@
 
 #include "Utility/LightManager.h"
 #include "Utility/TransformManager.h"
+#include "ShadersC++/PortalShader.h"
 
 
 class App1 : public BaseApplication
@@ -29,6 +30,9 @@ protected:
 	void depthPass(PointLight* pLight);
 	void depthPass(/*XMFLOAT3 lightPos, float range,*/ XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix);
 	void finalPass();
+	void RenderSceneObjs(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix);
+	void portalPass();
+	void CalculatePortalViewProjMatrix(const DirectX::XMMATRIX& portal1WorldMatrix, const DirectX::XMMATRIX& portal2WorldMatrix, DirectX::XMMATRIX& viewMatrix, DirectX::XMMATRIX& projMatrix);
 	void gui();
 
 	void TransformsGUI();
@@ -43,12 +47,17 @@ private:
 	CubeMesh* cube;
 	SphereMesh* sphere;
 	OrthoMesh* orthoMesh;
-
 	AModel* model;
+
 	ShadowShader* shadowShader;
 	DepthShader* depthShader;
-
 	LightManager* lightManager;
+
+	QuadMesh* quad;
+	PortalShader* portalShader;
+	RenderTexture* portalARenderTexture;
+	RenderTexture* portalBRenderTexture;
+
 };
 
 #endif

@@ -20,11 +20,12 @@ float lightDstFromCenter = 10.0;
 
 int pointLightShadowMapIndex = 0;
 
+float screenAspect;
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
 	
 	//DirectionalLight::DirectionalLightInfo* info = &direLight.info;
-
+	screenAspect = (float)screenWidth / screenHeight;
 	// Call super/parent init function (required!)
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
@@ -32,6 +33,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	mesh = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext());
 	sphere = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext());
 	cube = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
+	quad = new QuadMesh(renderer->getDevice(), renderer->getDeviceContext());
 	model = new AModel(renderer->getDevice(), "res/teapot.obj");
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth/2, screenHeight/2, -screenWidth/2.7, screenHeight/2.7);
 
@@ -42,7 +44,10 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureShader = new TextureShader(renderer->getDevice(), hwnd);
 	depthShader = new DepthShader(renderer->getDevice(), hwnd);
 	shadowShader = new ShadowShader(renderer->getDevice(), hwnd);
+	portalShader = new PortalShader(renderer->getDevice(), hwnd);
 
+	portalARenderTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+	portalBRenderTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
 
 	//Reads light info from file and creates lights
@@ -104,6 +109,7 @@ bool App1::render()
 	{
 		depthPass(&(it->second));
 	}
+	portalPass();
 	// Render scene
 	finalPass();
 
@@ -181,11 +187,24 @@ void App1::finalPass()
 	XMMATRIX viewMatrix = /*pLight->getViewMatrix();*/camera->getViewMatrix();
 	XMMATRIX projectionMatrix = /*pLight->getProjectionMatrix();*/renderer->getProjectionMatrix();
 	
+	RenderSceneObjs(worldMatrix, viewMatrix, projectionMatrix);
 
+	//renderer->setZBuffer(false);
+	//orthoMesh->sendData(renderer->getDeviceContext());
+	//textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), 
+	//	/*lightManager->pShadowMapsSRV*/lightManager->GetPointLightsBegin()->second.shadowMaps[pointLightShadowMapIndex]->getDepthMapSRV());
+	//textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	//renderer->setZBuffer(true);
+
+	gui();
+	renderer->endScene();
+}
+void App1::RenderSceneObjs(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix)
+{
 	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
 	// Render floor
 	mesh->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, 
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix,
 		textureMgr->getTexture(L"wood"), lightManager, camera);
 	shadowShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
@@ -213,32 +232,82 @@ void App1::finalPass()
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
 	{
 		worldMatrix = (it->second).GetWorldMatrix();
-		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale * worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
 		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
 	for (auto it = lightManager->GetPointLightsBegin(); it != lightManager->GetPointLightsEnd(); it++)
 	{
 		worldMatrix = (it->second).GetWorldMatrix();
-		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale * worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
 		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
 	for (auto it = lightManager->GetSpotLightsBegin(); it != lightManager->GetSpotLightsEnd(); it++)
 	{
 		worldMatrix = (it->second).GetWorldMatrix();
-		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale*worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale * worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
 		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
 
+	//portal A
+	quad->sendData(renderer->getDeviceContext());
+	portalShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("portalA"), viewMatrix, projectionMatrix, portalARenderTexture->getShaderResourceView());
+	portalShader->render(renderer->getDeviceContext(), quad->getIndexCount());
+	//portal B
+	portalShader->setShaderParameters(renderer->getDeviceContext(), XMMatrixScaling(-1, 1, 1) * tManager->GetTransformMatrix("portalB"), viewMatrix, projectionMatrix, portalBRenderTexture->getShaderResourceView());
+	portalShader->render(renderer->getDeviceContext(), quad->getIndexCount());
+}
 
-	renderer->setZBuffer(false);
-	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), 
-		/*lightManager->pShadowMapsSRV*/lightManager->GetPointLightsBegin()->second.shadowMaps[pointLightShadowMapIndex]->getDepthMapSRV());
-	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
-	renderer->setZBuffer(true);
+void App1::portalPass()
+{
+	// Set the render target to be the render to texture and clear it (portalA render texture)
+	portalARenderTexture->setRenderTarget(renderer->getDeviceContext());
+	portalARenderTexture->clearRenderTarget(renderer->getDeviceContext(), 0.39f, 0.58f, 0.92f, 1.0f);
 
-	gui();
-	renderer->endScene();
+	//gets view matrix from portal A to portal B
+	XMMATRIX worldMatrix = renderer->getWorldMatrix();
+	XMMATRIX viewMatrix, projMatrix;
+	CalculatePortalViewProjMatrix(tManager->GetTransformMatrix("portalA"), tManager->GetTransformMatrix("portalB"), viewMatrix, projMatrix);
+
+	RenderSceneObjs(worldMatrix, viewMatrix, projMatrix);
+
+	// Set the render target to be the render to texture and clear it (portalB render texture)
+	portalBRenderTexture->setRenderTarget(renderer->getDeviceContext());
+	portalBRenderTexture->clearRenderTarget(renderer->getDeviceContext(), 0.39f, 0.58f, 0.92f, 1.0f);
+
+	//gets view matrix from portal A to portal B
+	CalculatePortalViewProjMatrix(tManager->GetUnscaledTransformMatrix("portalB"), tManager->GetUnscaledTransformMatrix("portalA"), viewMatrix, projMatrix);
+	RenderSceneObjs(worldMatrix, viewMatrix, projMatrix);
+
+	renderer->setBackBufferRenderTarget();
+}
+#define DEG2PI 0.0174532925f
+void App1::CalculatePortalViewProjMatrix(const DirectX::XMMATRIX& portal1WorldMatrix, const DirectX::XMMATRIX& portal2WorldMatrix, DirectX::XMMATRIX& viewMatrix, DirectX::XMMATRIX& projMatrix)
+{	
+	XMMATRIX camWorldMatrix = XMMatrixRotationRollPitchYaw(camera->getRotation().x * DEG2PI, camera->getRotation().y * DEG2PI, camera->getRotation().z * DEG2PI) * XMMatrixTranslation(camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
+	XMMATRIX portal1WorldToLocal = XMMatrixInverse(NULL, portal1WorldMatrix);
+
+	//These two points are needed to calculate forward and up vectors that can be used to create the view matrix
+	XMVECTOR forwardVector = XMVectorSet(0,0,1 ,1);
+	XMVECTOR upVector = XMVectorSet(0,1,0 ,1);
+
+	//(0,0,0),(0,0,1) and (0,1,0) are transformed from local camera space to world space. 
+	//Their positions relative to portal1 (local portal1 space) are then converted to world space as if relative to portal2
+	XMMATRIX m = camWorldMatrix * portal1WorldToLocal * portal2WorldMatrix;
+	forwardVector = XMVector4Transform(forwardVector, m);
+	upVector = XMVector4Transform(upVector, m);
+
+	XMVECTOR transformedCamPosVector = XMVECTOR(m.r[3]); //the last row of m holds the transformed camera position (transforming (0,0,0) in local camera space)
+	//we calculate the forward and up vectors as forwardPoint - camPos and upPoint - camPos
+	forwardVector -= transformedCamPosVector;
+	upVector -= transformedCamPosVector;
+
+	viewMatrix = XMMatrixLookToLH(transformedCamPosVector, XMVector3Normalize(forwardVector), XMVector3Normalize(upVector));
+
+	//The near plane of the projection needs to match the distance from the transformed camera position to portal2.
+	//Otherwise, since the virtual camera is behind portal2 if anything was between the two it would show up in the render texture
+	XMVECTOR portal2Pos = portal2WorldMatrix.r[3];
+	XMVECTOR dst = XMVector4Length(transformedCamPosVector - portal2Pos);
+	projMatrix = XMMatrixPerspectiveFovLH(45 * DEG2PI, screenAspect, dst.m128_f32[0], SCREEN_DEPTH);
 }
 
 

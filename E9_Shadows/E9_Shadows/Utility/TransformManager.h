@@ -16,6 +16,7 @@ public:
 	};
 
 	XMMATRIX GetTransformMatrix(string id);
+	XMMATRIX GetUnscaledTransformMatrix(string id);
 	Transform* GetTransform(string id);
 
 	std::map<string, Transform>::iterator GetBegin();
@@ -26,6 +27,7 @@ public:
 	void AddTransform(string id, float pos[3]);
 
 	void ReadTransformDataFromFile(string filePath);
+	void ReadTransform(string id, string transformStr);
 	void WriteTransformDataToFile(string filePath);
 private:
 	std::map<string, Transform> transforms;

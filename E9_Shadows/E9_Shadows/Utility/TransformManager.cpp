@@ -12,6 +12,12 @@ XMMATRIX TransformManager::GetTransformMatrix(string id)
 	return XMMatrixScaling(t->scale[0], t->scale[1], t->scale[2]) * XMMatrixRotationRollPitchYaw(t->rotation[0], t->rotation[1], t->rotation[2])
 		* XMMatrixTranslation(t->position[0], t->position[1], t->position[2]);
 }
+XMMATRIX TransformManager::GetUnscaledTransformMatrix(string id)
+{
+	Transform* t = &transforms.at(id);
+	return XMMatrixRotationRollPitchYaw(t->rotation[0], t->rotation[1], t->rotation[2])
+		* XMMatrixTranslation(t->position[0], t->position[1], t->position[2]);
+}
 
 TransformManager::Transform* TransformManager::GetTransform(string id)
 {
@@ -67,18 +73,27 @@ void TransformManager::ReadTransformDataFromFile(string filePath)
 	{
 		string id = line.substr(0, line.find_first_of(':'));
 		string transformStr = line.substr(id.size()+1);
-		string posStr = transformStr.substr(1, transformStr.find_first_of('}')-1);
-		string rotStr = transformStr.substr(posStr.size()+4, transformStr.find_first_of('}') - 2);
-		string scaleStr = transformStr.substr(posStr.size()+rotStr.size() + 7, transformStr.find_first_of('}') - 1);
 
-		float pos[3], rot[3], scale[3];
-		StrToFloat3(posStr, pos);
-		StrToFloat3(rotStr, rot);
-		StrToFloat3(scaleStr, scale);
-		AddTransform(id, pos, rot, scale);
+		ReadTransform(id, transformStr);
 	}
 	myReadFile.close();
 }
+void TransformManager::ReadTransform(string id, string transformStr)
+{
+	std::stringstream ss(transformStr);
+	float pos[3], rot[3], scale[3];
+	string posStr, rotStr, scaleStr;
+
+	getline(ss, posStr, '}');
+	StrToFloat3(posStr.substr(1), pos);
+	getline(ss, rotStr, '}');
+	StrToFloat3(rotStr.substr(2), rot);
+	getline(ss, scaleStr, '}');
+	StrToFloat3(scaleStr.substr(2), scale);
+
+	AddTransform(id, pos, rot, scale);
+}
+
 
 string Float3ToStr(const float a[3]) {
 	return "{" + std::to_string(a[0]) + "," + std::to_string(a[1]) + "," + std::to_string(a[2]) + "}";
