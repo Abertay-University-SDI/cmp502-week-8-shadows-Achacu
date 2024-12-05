@@ -168,7 +168,9 @@
     <ClCompile Include="ShadersC++\DepthShader.cpp" />
     <ClCompile Include="ShadersC++\PortalShader.cpp" />
     <ClCompile Include="ShadersC++\ShadowShader.cpp" />
+    <ClCompile Include="ShadersC++\TessellationShader.cpp" />
     <ClCompile Include="ShadersC++\TextureShader.cpp" />
+    <ClCompile Include="TessellationPlane.cpp" />
     <ClCompile Include="Utility\LightManager.cpp" />
     <ClCompile Include="Utility\MyLight.cpp" />
     <ClCompile Include="Utility\TransformManager.cpp" />
@@ -178,7 +180,9 @@
     <ClInclude Include="ShadersC++\DepthShader.h" />
     <ClInclude Include="ShadersC++\PortalShader.h" />
     <ClInclude Include="ShadersC++\ShadowShader.h" />
+    <ClInclude Include="ShadersC++\TessellationShader.h" />
     <ClInclude Include="ShadersC++\TextureShader.h" />
+    <ClInclude Include="TessellationPlane.h" />
     <ClInclude Include="Utility\LightManager.h" />
     <ClInclude Include="Utility\MyLight.h" />
     <ClInclude Include="Utility\TransformManager.h" />
@@ -215,6 +219,22 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shaders\tessellation_ds.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Domain</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_hs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Hull</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Hull</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\texture_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
@@ -227,6 +247,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\heightmap.hlsli" />
     <None Include="shaders\light_utils.hlsli" />
   </ItemGroup>
   <ItemGroup>

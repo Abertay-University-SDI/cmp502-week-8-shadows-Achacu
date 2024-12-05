@@ -42,6 +42,12 @@
     <ClCompile Include="Utility\LightManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ShadersC++\TessellationShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TessellationPlane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -66,6 +72,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility\LightManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadersC++\TessellationShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TessellationPlane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -94,11 +106,16 @@
     <FxCompile Include="shaders\portal_vs.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\tessellation_hs.hlsl" />
+    <FxCompile Include="shaders\tessellation_ps.hlsl" />
+    <FxCompile Include="shaders\tessellation_ds.hlsl" />
+    <FxCompile Include="shaders\tessellation_vs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\light_utils.hlsli">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\heightmap.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Utility\transformData.txt">

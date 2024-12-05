@@ -37,6 +37,10 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	model = new AModel(renderer->getDevice(), "res/teapot.obj");
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth/2, screenHeight/2, -screenWidth/2.7, screenHeight/2.7);
 
+	// Create Mesh object and shader object
+	tesPlane = new TessellationPlane(renderer->getDevice(), renderer->getDeviceContext(), 100);
+
+	textureMgr->loadTexture(L"height", L"res/height.png");
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 
@@ -45,6 +49,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	depthShader = new DepthShader(renderer->getDevice(), hwnd);
 	shadowShader = new ShadowShader(renderer->getDevice(), hwnd);
 	portalShader = new PortalShader(renderer->getDevice(), hwnd);
+	heightMapShader = new TessellationShader(renderer->getDevice(), hwnd);
 
 	portalARenderTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 	portalBRenderTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
@@ -140,7 +145,7 @@ void App1::depthPass(PointLight* pLight)
 	}
 
 }
-void App1::depthPass(/*XMFLOAT3 lightPos, float range,*/ XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix)
+void App1::depthPass(XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix)
 {	
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
@@ -255,6 +260,15 @@ void App1::RenderSceneObjs(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX p
 	//portal B
 	portalShader->setShaderParameters(renderer->getDeviceContext(), XMMatrixScaling(-1, 1, 1) * tManager->GetTransformMatrix("portalB"), viewMatrix, projectionMatrix, portalBRenderTexture->getShaderResourceView());
 	portalShader->render(renderer->getDeviceContext(), quad->getIndexCount());
+
+	//Tessellated height map mesh
+	float tessellationFactors[4] = {1,1,1,1};
+	float tesRange[2] = {5,30};
+	tesPlane->sendData(renderer->getDeviceContext());
+	heightMapShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("terrain"), viewMatrix, projectionMatrix,
+		tessellationFactors, camera, tesRange, textureMgr->getTexture(L"height"));
+	heightMapShader->render(renderer->getDeviceContext(), tesPlane->getIndexCount());
+
 }
 
 void App1::portalPass()
@@ -309,7 +323,6 @@ void App1::CalculatePortalViewProjMatrix(const DirectX::XMMATRIX& portal1WorldMa
 	XMVECTOR dst = XMVector4Length(transformedCamPosVector - portal2Pos);
 	projMatrix = XMMatrixPerspectiveFovLH(45 * DEG2PI, screenAspect, dst.m128_f32[0], SCREEN_DEPTH);
 }
-
 
 DirectionalLight myLight = DirectionalLight();
 void App1::gui()

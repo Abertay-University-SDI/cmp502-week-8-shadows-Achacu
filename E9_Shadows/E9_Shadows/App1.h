@@ -11,6 +11,8 @@
 #include "Utility/LightManager.h"
 #include "Utility/TransformManager.h"
 #include "ShadersC++/PortalShader.h"
+#include "TessellationPlane.h"
+#include "ShadersC++/TessellationShader.h"
 
 
 class App1 : public BaseApplication
@@ -58,6 +60,8 @@ private:
 	RenderTexture* portalARenderTexture;
 	RenderTexture* portalBRenderTexture;
 
+	TessellationPlane* tesPlane;
+	TessellationShader* heightMapShader;
 };
 
 #endif
