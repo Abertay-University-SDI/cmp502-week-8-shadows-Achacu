@@ -37,7 +37,6 @@ ShadowShader::~ShadowShader()
 
 void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
 {
-	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_SAMPLER_DESC shadowSamplerDesc;
 	D3D11_BUFFER_DESC cameraBufferDesc;
@@ -47,6 +46,7 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	loadPixelShader(psFilename);
 
 	// Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
+	D3D11_BUFFER_DESC matrixBufferDesc;
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
 	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -54,6 +54,15 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	matrixBufferDesc.MiscFlags = 0;
 	matrixBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
+
+	D3D11_BUFFER_DESC lightMatrixBufferDesc;
+	lightMatrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightMatrixBufferDesc.ByteWidth = sizeof(LightMatrixBufferType);
+	lightMatrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightMatrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightMatrixBufferDesc.MiscFlags = 0;
+	lightMatrixBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&lightMatrixBufferDesc, NULL, &lightMatrixBuffer);
 
 	// Create a texture sampler state description.
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -105,8 +114,6 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, LightManager* lightManager, Camera* cam)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	MatrixBufferType* dataPtr;
-	LightBufferType* lightPtr;
 	
 	// Transpose the matrices to prepare them for the shader.
 	XMMATRIX tworld = XMMatrixTranspose(worldMatrix);
@@ -164,17 +171,25 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	}
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
-
-	// Lock the constant buffer so it can be written to.
+	
+	MatrixBufferType* matrixPtr;
 	deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	dataPtr = (MatrixBufferType*)mappedResource.pData;
-	dataPtr->world = tworld;// worldMatrix;
-	dataPtr->view = tview;
-	dataPtr->projection = tproj;
-	memcpy(dataPtr->lightViews, lightViews, sizeof(lightViews));
-	memcpy(dataPtr->lightProjections, lightProjections, sizeof(lightProjections));
+	matrixPtr = (MatrixBufferType*)mappedResource.pData;
+	matrixPtr->world = tworld;// worldMatrix;
+	matrixPtr->view = tview;
+	matrixPtr->projection = tproj;
 	deviceContext->Unmap(matrixBuffer, 0);
+
+	LightMatrixBufferType* lightMatrixPtr;
+	deviceContext->Map(lightMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	lightMatrixPtr = (LightMatrixBufferType*)mappedResource.pData;
+	memcpy(lightMatrixPtr->lightViews, lightViews, sizeof(lightViews));
+	memcpy(lightMatrixPtr->lightProjections, lightProjections, sizeof(lightProjections));
+	deviceContext->Unmap(lightMatrixBuffer, 0);
+
+
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
+	deviceContext->VSSetConstantBuffers(1, 1, &lightMatrixBuffer);
 
 	//shadow maps
 	deviceContext->PSSetShaderResources(0, 1, &lightManager->dirShadowMapsSRV);

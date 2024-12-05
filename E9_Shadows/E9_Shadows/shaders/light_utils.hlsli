@@ -8,6 +8,9 @@ cbuffer MatrixBuffer : register(b0)
     matrix worldMatrix;
     matrix viewMatrix;
     matrix projectionMatrix;
+};
+cbuffer LightMatrixBuffer : register(b1)
+{
     matrix lightViewMatrices[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT];
     matrix lightProjectionMatrices[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT];
 };

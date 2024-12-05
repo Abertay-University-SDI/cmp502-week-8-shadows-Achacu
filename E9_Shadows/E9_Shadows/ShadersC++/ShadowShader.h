@@ -18,6 +18,9 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX projection;
+	};
+	struct LightMatrixBufferType
+	{
 		XMMATRIX lightViews[SHADOW_MAP_COUNT];
 		XMMATRIX lightProjections[SHADOW_MAP_COUNT];
 	};
@@ -50,6 +53,7 @@ private:
 
 private:
 	ID3D11Buffer* matrixBuffer;
+	ID3D11Buffer* lightMatrixBuffer;
 	ID3D11SamplerState* sampleState;
 	ID3D11SamplerState* sampleStateShadow;
 

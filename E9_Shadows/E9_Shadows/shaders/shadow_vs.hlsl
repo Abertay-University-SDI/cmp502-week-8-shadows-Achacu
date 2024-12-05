@@ -1,4 +1,4 @@
-#include "light_utils.hlsli" //matrix buffer in b0
+#include "light_utils.hlsli" //matrix buffer in b0, light matrix buffer in b1
 
 struct InputType
 {
