@@ -16,6 +16,7 @@ cbuffer LightMatrixBuffer : register(b1)
 };
 
 
+
 Texture2DArray dirShadowMaps : register(t0);
 Texture2DArray spotShadowMaps : register(t1);
 TextureCubeArray pointShadowMaps : register(t2);
@@ -66,6 +67,11 @@ cbuffer LightBuffer : register(b0)
     SpotLight sLights[SPOT_LIGHT_COUNT];
     matrix pLightViews[6 * POINT_LIGHT_COUNT];
     matrix pLightProjections[POINT_LIGHT_COUNT];
+};
+cbuffer CameraBuffer : register(b1)
+{
+    float3 camWorldPos;
+    float padding;
 };
 
 

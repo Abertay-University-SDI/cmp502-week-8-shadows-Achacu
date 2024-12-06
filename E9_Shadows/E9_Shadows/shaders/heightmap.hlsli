@@ -1,5 +1,5 @@
-Texture2D heightTex : register(t0);
-SamplerState heightTexSampler : register(s0);
+Texture2D heightTex : register(t3);
+SamplerState heightTexSampler : register(s1);
 
 float GetHeight(float2 uv)
 {

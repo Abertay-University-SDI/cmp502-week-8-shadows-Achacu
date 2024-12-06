@@ -13,6 +13,7 @@
 #include "ShadersC++/PortalShader.h"
 #include "TessellationPlane.h"
 #include "ShadersC++/TessellationShader.h"
+#include "ShadersC++/HeightmapDepthShader.h"
 
 
 class App1 : public BaseApplication
@@ -62,6 +63,7 @@ private:
 
 	TessellationPlane* tesPlane;
 	TessellationShader* heightMapShader;
+	HeightmapDepthShader* heightmapDepthShader;
 };
 
 #endif

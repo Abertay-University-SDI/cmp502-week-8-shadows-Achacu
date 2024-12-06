@@ -50,6 +50,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	shadowShader = new ShadowShader(renderer->getDevice(), hwnd);
 	portalShader = new PortalShader(renderer->getDevice(), hwnd);
 	heightMapShader = new TessellationShader(renderer->getDevice(), hwnd);
+	heightmapDepthShader = new HeightmapDepthShader(renderer->getDevice(), hwnd);
 
 	portalARenderTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 	portalBRenderTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
@@ -63,10 +64,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	//Reads transform info from file and creates transforms
 	tManager = new TransformManager();
 	tManager->ReadTransformDataFromFile("Utility/transformData.txt");
-
-	//lightManager->AddDirectionalLight("light1", new float[4] {0, 0, 0, 1}, new float[4] {1, 1, 0, 1}, new float[4] {0, 0, 0, 0},new float[4] {2, 5, 5, 10}, new float[4] {-0.7, -0.7, 0, 0});
-	//lightManager->AddDirectionalLight("light2", new float[4] {0, 0.234, 0, 1}, new float[4] {1, 1, 1, 1}, new float[4] {0, 0, 1, 0.2},new float[4] {2, 3, 4, 20}, new float[4] {-0.7, 0.7, 0.7, 0});
-	//string s = lightManager->GetDirectionalLight("light1")->ToString();
 }
 
 App1::~App1()
@@ -173,6 +170,15 @@ void App1::depthPass(XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix)
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
 	depthShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
+	//Tessellated height map mesh
+	float tessellationFactors[4] = { 1,1,1,1 };
+	float tesRange[2] = { 5,30 };
+	tesPlane->sendData(renderer->getDeviceContext());
+	heightmapDepthShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("terrain"), lightViewMatrix, lightProjMatrix,
+		tessellationFactors, camera, tesRange, textureMgr->getTexture(L"height"));
+	heightmapDepthShader->render(renderer->getDeviceContext(), tesPlane->getIndexCount());
+
+
 	// Set back buffer as render target and reset view port.
 	renderer->setBackBufferRenderTarget();
 	renderer->resetViewport();
@@ -194,12 +200,12 @@ void App1::finalPass()
 	
 	RenderSceneObjs(worldMatrix, viewMatrix, projectionMatrix);
 
-	//renderer->setZBuffer(false);
-	//orthoMesh->sendData(renderer->getDeviceContext());
-	//textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), 
-	//	/*lightManager->pShadowMapsSRV*/lightManager->GetPointLightsBegin()->second.shadowMaps[pointLightShadowMapIndex]->getDepthMapSRV());
-	//textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
-	//renderer->setZBuffer(true);
+	renderer->setZBuffer(false);
+	orthoMesh->sendData(renderer->getDeviceContext());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), renderer->getWorldMatrix(), camera->getOrthoViewMatrix(), renderer->getOrthoMatrix(), 
+		/*lightManager->pShadowMapsSRV*/lightManager->GetPointLightsBegin()->second.shadowMaps[pointLightShadowMapIndex]->getDepthMapSRV());
+	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	renderer->setZBuffer(true);
 
 	gui();
 	renderer->endScene();
@@ -266,7 +272,7 @@ void App1::RenderSceneObjs(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX p
 	float tesRange[2] = {5,30};
 	tesPlane->sendData(renderer->getDeviceContext());
 	heightMapShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("terrain"), viewMatrix, projectionMatrix,
-		tessellationFactors, camera, tesRange, textureMgr->getTexture(L"height"));
+		lightManager, tessellationFactors, camera, tesRange, textureMgr->getTexture(L"height"));
 	heightMapShader->render(renderer->getDeviceContext(), tesPlane->getIndexCount());
 
 }

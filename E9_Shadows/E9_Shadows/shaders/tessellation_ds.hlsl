@@ -1,20 +1,7 @@
 // Tessellation domain shader
 // After tessellation the domain shader processes the all the vertices
+#include "light_utils.hlsli" //matrix buffer in b0, light matrix buffer in b1
 #include "heightmap.hlsli"
-
-cbuffer MatrixBuffer : register(b0)
-{
-    matrix worldMatrix;
-    matrix viewMatrix;
-    matrix projectionMatrix;
-};
-cbuffer WaveBuffer : register(b1)
-{
-    float time;
-    float A;
-    float freq;
-    float speed;
-};
 
 struct ConstantOutputType
 {
@@ -36,6 +23,8 @@ struct OutputType
     float4 colour : COLOR;
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
+    float3 worldPosition : POSITION;
+    float4 lightViewPos[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT] : TEXCOORD1; //vertex position in light view space (light2Vertex distance can be computed from this)
 };
 
 [domain("quad")]
@@ -62,8 +51,13 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
     output.colour = patch[0].colour;
     
     // Calculate the position of the new vertex against the world, view, and projection matrices.
-    output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
-    output.position = mul(output.position, viewMatrix);
+    float4 worldPosition = mul(float4(vertexPosition, 1.0f), worldMatrix);
+    output.worldPosition = worldPosition.xyz;
+
+   	// Calculate the position of the vertex as viewed and projected from each light source
+    calculateLightViewPositions(worldPosition, output.lightViewPos);
+    
+    output.position = mul(worldPosition, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
     return output;
 }

@@ -1,5 +1,6 @@
 // Tessellation pixel shader
 // Output colour passed to stage.
+#include "light_utils.hlsli" //covers t0-2, b1 and s0 registers
 #include "heightmap.hlsli"
 
 struct InputType
@@ -8,6 +9,8 @@ struct InputType
     float4 colour : COLOR;
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
+    float3 worldPosition : POSITION;
+    float4 lightViewPos[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT] : TEXCOORD1; //vertex position in light view space (light2Vertex distance can be computed from this)
 };
 
 float3 CalcNormal(float2 uv, out float uvStep)
@@ -46,16 +49,14 @@ float3 CalcNormal(float2 uv, out float uvStep)
     return -cross(tanRL, tanUD);
 }
 
-
-// Calculate lighting intensity based on direction and normal. Combine with light colour.
-float4 calculateLighting(float3 lightDirection, float3 normal, float4 diffuse)
-{
-    float intensity = saturate(dot(normal, lightDirection));
-    float4 colour = saturate(diffuse * intensity);
-    return colour;
-}
 float4 main(InputType input) : SV_TARGET
 {
     float outUVStep;
-    return calculateLighting(float3(0.7, 0.7, 0), CalcNormal(input.tex, outUVStep), input.colour);
+    
+    float4 textureColor = input.colour; //shaderTexture.Sample(diffuseSampler, input.tex);
+    float4 finalSpecularColor;
+    float4 finalLightColor = applyLightingAndShadows(CalcNormal(input.tex, outUVStep), input.lightViewPos, input.worldPosition, camWorldPos, finalSpecularColor);
+    
+    float4 finalColor = textureColor * finalLightColor + finalSpecularColor;
+    return finalColor;            
 }

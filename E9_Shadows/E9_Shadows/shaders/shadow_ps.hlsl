@@ -3,12 +3,6 @@
 Texture2D shaderTexture : register(t3);
 SamplerState diffuseSampler  : register(s1);
 
-cbuffer CameraBuffer : register(b1)
-{
-    float3 camWorldPos;
-    float padding;
-};
-
 struct InputType
 {
     float4 position : SV_POSITION;
