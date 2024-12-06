@@ -92,7 +92,7 @@ inline void InitLightingAndShadowInfo(ID3D11Device* renderer, ID3D11Buffer*& mat
 
 inline void SetLightingAndShadowParameters(ID3D11DeviceContext* deviceContext, D3D11_MAPPED_SUBRESOURCE& mappedResource, Camera* cam, LightManager* lightManager,
 	const DirectX::XMMATRIX& tworld, const DirectX::XMMATRIX& tview, const DirectX::XMMATRIX& tproj, ID3D11Buffer* matrixBuffer,
-	ID3D11Buffer* lightMatrixBuffer, ID3D11SamplerState* sampleStateShadow, ID3D11Buffer* lightBuffer, ID3D11Buffer* cameraBuffer)
+	ID3D11Buffer* lightMatrixBuffer, ID3D11SamplerState* sampleStateShadow, ID3D11Buffer* lightBuffer, ID3D11Buffer* cameraBuffer, bool useDomainShader)
 {
 	//Send camera data to pixel shader
 	CameraBufferType* camPtr;
@@ -162,8 +162,16 @@ inline void SetLightingAndShadowParameters(ID3D11DeviceContext* deviceContext, D
 	deviceContext->Unmap(lightMatrixBuffer, 0);
 
 
-	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
-	deviceContext->VSSetConstantBuffers(1, 1, &lightMatrixBuffer);
+	if (!useDomainShader)
+	{
+		deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
+		deviceContext->VSSetConstantBuffers(1, 1, &lightMatrixBuffer);
+	}
+	else
+	{
+		deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
+		deviceContext->DSSetConstantBuffers(1, 1, &lightMatrixBuffer);
+	}
 
 	//shadow maps
 	deviceContext->PSSetShaderResources(0, 1, &lightManager->dirShadowMapsSRV);

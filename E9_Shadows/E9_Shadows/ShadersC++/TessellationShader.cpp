@@ -85,10 +85,9 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	// Lock the constant buffer so it can be written to.
 	SetLightingAndShadowParameters(deviceContext, mappedResource, cam, lightManager, tworld, tview, tproj,
-		matrixBuffer, lightMatrixBuffer, sampleStateShadow, lightBuffer, cameraBuffer);
+		matrixBuffer, lightMatrixBuffer, sampleStateShadow, lightBuffer, cameraBuffer, true);
 
 	deviceContext->HSSetConstantBuffers(1, 1, &matrixBuffer);
-	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
 
 	result = deviceContext->Map(tessellationBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	TessellationBufferType* tesPtr = (TessellationBufferType*)mappedResource.pData;

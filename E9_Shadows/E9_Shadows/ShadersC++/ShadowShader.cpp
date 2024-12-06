@@ -72,7 +72,7 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	XMMATRIX tproj = XMMatrixTranspose(projectionMatrix);
 
 	SetLightingAndShadowParameters(deviceContext, mappedResource, cam, lightManager, tworld, tview, tproj, 
-		matrixBuffer, lightMatrixBuffer, sampleStateShadow, lightBuffer, cameraBuffer);
+		matrixBuffer, lightMatrixBuffer, sampleStateShadow, lightBuffer, cameraBuffer, false);
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(3, 1, &texture);
