@@ -2,7 +2,7 @@
 #define POINT_LIGHT_COUNT 2
 #define SPOT_LIGHT_COUNT 2
 
-//vertex shader
+//vertex shader / domain shader
 cbuffer MatrixBuffer : register(b0)
 {
     matrix worldMatrix;
@@ -16,12 +16,11 @@ cbuffer LightMatrixBuffer : register(b1)
 };
 
 
-
+//pixel shader
 Texture2DArray dirShadowMaps : register(t0);
 Texture2DArray spotShadowMaps : register(t1);
 TextureCubeArray pointShadowMaps : register(t2);
 
-//Texture2D dirShadowMaps[DIR_LIGHT_COUNT] : register(t1);
 SamplerState shadowSampler : register(s0);
 
 struct DirectionalLight

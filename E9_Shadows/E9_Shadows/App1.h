@@ -64,6 +64,9 @@ private:
 	TessellationPlane* tesPlane;
 	TessellationShader* heightMapShader;
 	HeightmapDepthShader* heightmapDepthShader;
+	float tesDstRange[2] = { 5,100 };
+	float tesHeightRange[2] = { 0.5f,5.f };
+	float maxTessellation = 12.f;
 };
 
 #endif

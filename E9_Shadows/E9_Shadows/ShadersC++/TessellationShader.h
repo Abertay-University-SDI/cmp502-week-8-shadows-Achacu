@@ -18,13 +18,14 @@ public:
 	TessellationShader(ID3D11Device* device, HWND hwnd);
 	~TessellationShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, LightManager* lightManager, float tessellationFactors[4], Camera* cam, float tessellationRange[2], ID3D11ShaderResourceView* heightTex);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, LightManager* lightManager, Camera* cam, float tesDstRange[2], float tesHeightRange[2], float maxTessellation, ID3D11ShaderResourceView* heightTex);
 private:
 	struct TessellationBufferType
 	{
-		XMFLOAT4 tessellationFactors;
+		XMFLOAT2 tesDstRange;
+		XMFLOAT2 tesHeightRange;
 		XMFLOAT3 camWorldPos;
-		float maxTessellationDistance;
+		float maxTessellation;
 	};
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);
 	void initShader(const wchar_t* vsFilename, const wchar_t* hsFilename, const wchar_t* dsFilename, const wchar_t* psFilename);

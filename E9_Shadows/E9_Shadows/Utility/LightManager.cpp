@@ -252,7 +252,7 @@ void LightManager::InitializeSpotLights(ID3D11Device* renderer)
 		string id = it->first;
 		sLight = &(it->second);
 
-		sLight->shadowMap = new ShadowMap(renderer, shadowmapWidth, shadowmapHeight, sShadowMaps, i);
+		sLight->shadowMap = new ShadowMap(renderer, dirShadowmapWidth, dirShadowmapHeight, sShadowMaps, i);
 		sLight->generatePerspectiveMatrix();
 	}
 }

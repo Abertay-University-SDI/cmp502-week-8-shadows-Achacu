@@ -4,9 +4,10 @@
 // Prepares control points for tessellation
 cbuffer TessellationBufferType : register(b0)
 {
-    float4 tessellationFactors;
+    float2 tesDstRange;
+    float2 tesHeightRange;
     float3 camWorldPos;
-    float maxTesDst;
+    float maxTessellation;
 };
 cbuffer MatrixBuffer : register(b1)
 {
@@ -37,14 +38,19 @@ struct OutputType
     float3 normal : NORMAL;
 };
 
-float CalculateTesFactor(float4 A, float4 B)
+//NOTE: edge factor calculations need to be done per-edge. Otherwise, neighboring edges in different patches will have different edge factors and the mesh will "break" 
+float CalculateTesFactor(float4 A, float4 B) 
 {
-    float3 edgeMiddle = (A + B) / 2; 
-    float minTesDst = tessellationFactors.r;
-
-    float tesFactorHeight = lerp(1, 32, saturate(abs(A.y - B.y) / tessellationFactors.y));
-    float tesFactorDstToCam = lerp(32, 1, saturate((distance(edgeMiddle, camWorldPos) - minTesDst)
-                                        / (maxTesDst - minTesDst)));
+    float3 edgeMiddle = (A + B).xyz * 0.5f; 
+    
+    //adjust according to the height difference between the two vertices that form the edge. Steeper edges will be more tessellated
+    float tesFactorHeight = lerp(1, maxTessellation, saturate((abs(A.y - B.y) - tesHeightRange.x) 
+                                        / (tesHeightRange.y - tesHeightRange.x)));
+    
+    //adjust according to the distance to camera difference between the two vertices that form the edge. Closer edges will be more tessellated
+    float tesFactorDstToCam = lerp(maxTessellation, 1, saturate((distance(edgeMiddle, camWorldPos) - tesDstRange.x)
+                                        / (tesDstRange.y - tesDstRange.x)));
+    
     return min(tesFactorDstToCam, tesFactorHeight);
 }
 
@@ -52,25 +58,25 @@ ConstantOutputType PatchConstantFunction(InputPatch<InputType, 4> inputPatch, ui
 {    
     ConstantOutputType output;
     
-    float4 vertexWorldPos0 = mul(float4(inputPatch[0].position.xyz,1), worldMatrix);
-    float4 vertexWorldPos1 = mul(float4(inputPatch[1].position.xyz,1), worldMatrix);
-    float4 vertexWorldPos2 = mul(float4(inputPatch[2].position.xyz,1), worldMatrix);
-    float4 vertexWorldPos3 = mul(float4(inputPatch[3].position.xyz,1), worldMatrix);
+    float4 vertexWorldPos0 = mul(float4(inputPatch[0].position.xyz,1), worldMatrix); //bottom left
+    float4 vertexWorldPos1 = mul(float4(inputPatch[1].position.xyz,1), worldMatrix); //bottom right
+    float4 vertexWorldPos2 = mul(float4(inputPatch[2].position.xyz,1), worldMatrix); //top right
+    float4 vertexWorldPos3 = mul(float4(inputPatch[3].position.xyz,1), worldMatrix); //top left
     
     //Take into account vertex displacement
-    vertexWorldPos0 += GetHeight(inputPatch[0].tex);
-    vertexWorldPos1 += GetHeight(inputPatch[1].tex);
-    vertexWorldPos2 += GetHeight(inputPatch[2].tex);
-    vertexWorldPos3 += GetHeight(inputPatch[3].tex);
+    vertexWorldPos0.y += GetHeight(inputPatch[0].tex);
+    vertexWorldPos1.y += GetHeight(inputPatch[1].tex);
+    vertexWorldPos2.y += GetHeight(inputPatch[2].tex);
+    vertexWorldPos3.y += GetHeight(inputPatch[3].tex);
     
-    //CAREFUL: edges are cw but vertices are ccw (both starting from bottom left)
-    output.edges[0] = CalculateTesFactor(vertexWorldPos0, vertexWorldPos1);
-    output.edges[1] = CalculateTesFactor(vertexWorldPos0, vertexWorldPos3);
-    output.edges[2] = CalculateTesFactor(vertexWorldPos2, vertexWorldPos3);
-    output.edges[3] = CalculateTesFactor(vertexWorldPos2, vertexWorldPos1);
+    //CAREFUL: edge indices are cw (starting from bottom) but vertices' are ccw (starting from bottom left)
+    output.edges[0] = CalculateTesFactor(vertexWorldPos0, vertexWorldPos1); //bottom
+    output.edges[1] = CalculateTesFactor(vertexWorldPos0, vertexWorldPos3); //left
+    output.edges[2] = CalculateTesFactor(vertexWorldPos2, vertexWorldPos3); //top
+    output.edges[3] = CalculateTesFactor(vertexWorldPos2, vertexWorldPos1); //right
 
-    // Set the tessellation factor for tessallating inside the triangle.
-    float innerFactor = (output.edges[0] + output.edges[1] + output.edges[2] + output.edges[3]) / 4;
+    //Inner factors are calculated as an average of the surrounding edge factors to prevent tessellation discontinuities
+    float innerFactor = (output.edges[0] + output.edges[1] + output.edges[2] + output.edges[3]) * 0.25f;
     output.inside[0] = innerFactor;
     output.inside[1] = innerFactor;
 

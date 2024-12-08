@@ -82,7 +82,8 @@ void HeightmapDepthShader::initShader(const wchar_t* vsFilename, const wchar_t* 
 }
 
 
-void HeightmapDepthShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, float tessellationFactors[4], Camera* cam, float tessellationRange[2], ID3D11ShaderResourceView* heightTex)
+void HeightmapDepthShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, 
+	Camera* cam, float tesDstRange[2], float tesHeightRange[2], float maxTessellation, ID3D11ShaderResourceView* heightTex)
 {	
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -103,11 +104,12 @@ void HeightmapDepthShader::setShaderParameters(ID3D11DeviceContext* deviceContex
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
 
 
-	result = deviceContext->Map(tessellationBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+result = deviceContext->Map(tessellationBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	TessellationBufferType* tesPtr = (TessellationBufferType*)mappedResource.pData;
-	tesPtr->tessellationFactors = XMFLOAT4(tessellationFactors);
+	tesPtr->tesDstRange = XMFLOAT2(tesDstRange);
+	tesPtr->tesHeightRange = XMFLOAT2(tesHeightRange);
+	tesPtr->maxTessellation = maxTessellation;
 	tesPtr->camWorldPos = cam->getPosition();
-	tesPtr->maxTessellationDistance = tessellationRange[1];
 	deviceContext->Unmap(tessellationBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &tessellationBuffer);
 

@@ -45,11 +45,14 @@ private:
 	void AddSpotLight(string id, float ambient[4], float diffuse[4], float specular[4], float position[4], float direction[4], float attenuation[4], float angleFalloff[4]);
 	void InitializeSpotLights(ID3D11Device* renderer);
 
-
-	int shadowmapWidth = 4096;
-	int shadowmapHeight = 4096;
+	//shadow maps for directional lights need higher resolution since they cover the whole scene
+	int dirShadowmapWidth = 4096;
+	int dirShadowmapHeight = 4096;
 	int sceneWidth = 100;
 	int sceneHeight = 100;
+
+	int shadowmapWidth = 1024;
+	int shadowmapHeight = 1024;
 
 	std::map<string, DirectionalLight> dirLights;
 	ID3D11Texture2D* dirShadowMaps;

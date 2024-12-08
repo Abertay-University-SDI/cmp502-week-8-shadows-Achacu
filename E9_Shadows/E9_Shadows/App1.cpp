@@ -21,6 +21,7 @@ float lightDstFromCenter = 10.0;
 int pointLightShadowMapIndex = 0;
 
 float screenAspect;
+
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
 	
@@ -40,7 +41,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	// Create Mesh object and shader object
 	tesPlane = new TessellationPlane(renderer->getDevice(), renderer->getDeviceContext(), 100);
 
-	textureMgr->loadTexture(L"height", L"res/height.png");
+	//textureMgr->loadTexture(L"height", L"res/height.png");
+	textureMgr->loadTexture(L"height", L"res/heightmap.png");
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 
@@ -171,11 +173,9 @@ void App1::depthPass(XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix)
 	depthShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 	//Tessellated height map mesh
-	float tessellationFactors[4] = { 1,1,1,1 };
-	float tesRange[2] = { 5,30 };
 	tesPlane->sendData(renderer->getDeviceContext());
 	heightmapDepthShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("terrain"), lightViewMatrix, lightProjMatrix,
-		tessellationFactors, camera, tesRange, textureMgr->getTexture(L"height"));
+		camera, tesDstRange, tesHeightRange, maxTessellation, textureMgr->getTexture(L"height"));
 	heightmapDepthShader->render(renderer->getDeviceContext(), tesPlane->getIndexCount());
 
 
@@ -268,11 +268,9 @@ void App1::RenderSceneObjs(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX p
 	portalShader->render(renderer->getDeviceContext(), quad->getIndexCount());
 
 	//Tessellated height map mesh
-	float tessellationFactors[4] = {1,1,1,1};
-	float tesRange[2] = {5,30};
 	tesPlane->sendData(renderer->getDeviceContext());
 	heightMapShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("terrain"), viewMatrix, projectionMatrix,
-		lightManager, tessellationFactors, camera, tesRange, textureMgr->getTexture(L"height"));
+		lightManager, camera, tesDstRange, tesHeightRange, maxTessellation, textureMgr->getTexture(L"height"));
 	heightMapShader->render(renderer->getDeviceContext(), tesPlane->getIndexCount());
 
 }
@@ -353,9 +351,15 @@ void App1::gui()
 	ImGui::SliderFloat3("RotationTeapot", teapotRot, -3.14, 3.14);
 	ImGui::SliderFloat3("ScaleTeapot", teapotScale, 0, 3);
 
+	ImGui::Text("Tessellation");
+	ImGui::DragFloat2("TesDstRange", tesDstRange, 0.1f, 0, 200);
+	ImGui::DragFloat2("TesHeightRange", tesHeightRange, 0.05f, 0, 50);
+	ImGui::SliderFloat("MaxTessellation", &maxTessellation, 1, 64);
+
 	LightGUI();
 	
 	TransformsGUI();
+
 
 	// Render UI
 	ImGui::Render();
