@@ -43,7 +43,6 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 	tessellationBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	tessellationBufferDesc.MiscFlags = 0;
 	tessellationBufferDesc.StructureByteStride = 0;
-
 	renderer->CreateBuffer(&tessellationBufferDesc, NULL, &tessellationBuffer);
 
 	// Create a texture sampler state description.
@@ -77,6 +76,16 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 	samplerDesc.MinLOD = 0;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	renderer->CreateSamplerState(&samplerDesc, &sampleState);
+
+	//heightmap texture info needed in pixel shader
+	D3D11_BUFFER_DESC heightmapPixelBufferDesc;
+	heightmapPixelBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	heightmapPixelBufferDesc.ByteWidth = sizeof(HeightmapPixelBufferType);
+	heightmapPixelBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	heightmapPixelBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	heightmapPixelBufferDesc.MiscFlags = 0;
+	heightmapPixelBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&heightmapPixelBufferDesc, NULL, &heightmapPixelBuffer);
 }
 
 void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hsFilename, const wchar_t* dsFilename, const wchar_t* psFilename)
@@ -92,7 +101,7 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hs
 
 void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, 
 	LightManager* lightManager, Camera* cam, float tesDstRange[2], float tesHeightRange[2], float maxTessellation, 
-	ID3D11ShaderResourceView* heightTex, ID3D11ShaderResourceView* diffuseTextures[4])
+	ID3D11ShaderResourceView* heightTex, ID3D11ShaderResourceView* diffuseTextures[4], float diffuseTexScales[4], int samplesPerTexel)
 {	
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -127,7 +136,15 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->PSSetShaderResources(3, 1, &heightTex);
 	deviceContext->PSSetSamplers(1, 1, &heightSampleState);
 
-	//Diffuse textures 
+	//Diffuse textures
+	result = deviceContext->Map(heightmapPixelBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	HeightmapPixelBufferType* heightPixelPtr = (HeightmapPixelBufferType*)mappedResource.pData;
+	heightPixelPtr->diffuseTexScales = XMFLOAT4(diffuseTexScales);
+	heightPixelPtr->samplesPerTexel = samplesPerTexel;
+	heightPixelPtr->padding3 = XMFLOAT3(0,0,0);
+	deviceContext->Unmap(heightmapPixelBuffer, 0);
+
+	deviceContext->PSSetConstantBuffers(2, 1, &heightmapPixelBuffer);
 	deviceContext->PSSetShaderResources(4, 4, diffuseTextures);
 	deviceContext->PSSetSamplers(2, 1, &sampleState);
 }

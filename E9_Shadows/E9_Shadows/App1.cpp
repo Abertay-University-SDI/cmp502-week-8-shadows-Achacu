@@ -36,7 +36,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	cube = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
 	quad = new QuadMesh(renderer->getDevice(), renderer->getDeviceContext());
 	model = new AModel(renderer->getDevice(), "res/teapot.obj");
-	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth/2, screenHeight/2, -screenWidth/2.7, screenHeight/2.7);
+	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth/4, screenHeight/4, -screenWidth/2.7, screenHeight/2.7);
 
 	// Create Mesh object and shader object
 	tesPlane = new TessellationPlane(renderer->getDevice(), renderer->getDeviceContext(), 100);
@@ -48,8 +48,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture(L"grass", L"res/grass.jpg");
 	textureMgr->loadTexture(L"rock", L"res/rock_diffuse.tif");
 
-	diffuseTextures[0] = textureMgr->getTexture(L"rock");
-	diffuseTextures[1] = textureMgr->getTexture(L"grass");
+	diffuseTextures[0] = textureMgr->getTexture(L"grass");
+	diffuseTextures[1] = textureMgr->getTexture(L"rock");
 
 	// initial shaders
 	textureShader = new TextureShader(renderer->getDevice(), hwnd);
@@ -275,7 +275,7 @@ void App1::RenderSceneObjs(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX p
 	//Tessellated height map mesh
 	tesPlane->sendData(renderer->getDeviceContext());
 	heightMapShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("terrain"), viewMatrix, projectionMatrix,
-		lightManager, camera, tesDstRange, tesHeightRange, maxTessellation, textureMgr->getTexture(L"height"), diffuseTextures);
+		lightManager, camera, tesDstRange, tesHeightRange, maxTessellation, textureMgr->getTexture(L"height"), diffuseTextures, diffuseTexScales, samplesPerTexel);
 	heightMapShader->render(renderer->getDeviceContext(), tesPlane->getIndexCount());
 
 }
@@ -360,6 +360,9 @@ void App1::gui()
 	ImGui::DragFloat2("TesDstRange", tesDstRange, 0.1f, 0, 200);
 	ImGui::DragFloat2("TesHeightRange", tesHeightRange, 0.05f, 0, 50);
 	ImGui::SliderFloat("MaxTessellation", &maxTessellation, 1, 64);
+	ImGui::Text("Heightmap");
+	ImGui::DragFloat4("DiffuseTexScales", diffuseTexScales, 0.05f, 0, 100);
+	ImGui::DragInt("SamplesPerTexel", &samplesPerTexel, 0.1f, 1, 30);
 
 	LightGUI();
 	

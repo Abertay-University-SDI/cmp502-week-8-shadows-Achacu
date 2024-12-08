@@ -18,7 +18,7 @@ public:
 	TessellationShader(ID3D11Device* device, HWND hwnd);
 	~TessellationShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, LightManager* lightManager, Camera* cam, float tesDstRange[2], float tesHeightRange[2], float maxTessellation, ID3D11ShaderResourceView* heightTex, ID3D11ShaderResourceView* diffuseTextures[4]);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, LightManager* lightManager, Camera* cam, float tesDstRange[2], float tesHeightRange[2], float maxTessellation, ID3D11ShaderResourceView* heightTex, ID3D11ShaderResourceView* diffuseTextures[4], float diffuseTexScales[4], int samplesPerTexel);
 private:
 	struct TessellationBufferType
 	{
@@ -26,6 +26,12 @@ private:
 		XMFLOAT2 tesHeightRange;
 		XMFLOAT3 camWorldPos;
 		float maxTessellation;
+	};	
+	struct HeightmapPixelBufferType
+	{
+		XMFLOAT4 diffuseTexScales;
+		int samplesPerTexel;
+		XMFLOAT3 padding3;
 	};
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);
 	void initShader(const wchar_t* vsFilename, const wchar_t* hsFilename, const wchar_t* dsFilename, const wchar_t* psFilename);
@@ -33,6 +39,8 @@ private:
 	ID3D11Buffer* matrixBuffer;
 	ID3D11Buffer* tessellationBuffer;
 	ID3D11SamplerState* heightSampleState;
+
+	ID3D11Buffer* heightmapPixelBuffer;
 
 	ID3D11Buffer* lightMatrixBuffer;
 
