@@ -48,8 +48,8 @@ private:
 	//shadow maps for directional lights need higher resolution since they cover the whole scene
 	int dirShadowmapWidth = 4096;
 	int dirShadowmapHeight = 4096;
-	int sceneWidth = 100;
-	int sceneHeight = 100;
+	int sceneWidth = 140;
+	int sceneHeight = 140;
 
 	int shadowmapWidth = 1024;
 	int shadowmapHeight = 1024;

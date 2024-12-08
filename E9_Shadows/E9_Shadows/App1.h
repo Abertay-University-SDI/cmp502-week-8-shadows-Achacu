@@ -67,6 +67,7 @@ private:
 	float tesDstRange[2] = { 5,100 };
 	float tesHeightRange[2] = { 0.5f,5.f };
 	float maxTessellation = 12.f;
+	ID3D11ShaderResourceView* diffuseTextures[4];
 };
 
 #endif

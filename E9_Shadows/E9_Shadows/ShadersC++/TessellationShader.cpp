@@ -60,6 +60,23 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 	renderer->CreateSamplerState(&heightSamplerDesc, &heightSampleState);
 
 	InitLightingAndShadowInfo(renderer, matrixBuffer, lightMatrixBuffer, sampleStateShadow, cameraBuffer, lightBuffer);
+
+	// Create a texture sampler state description.
+	D3D11_SAMPLER_DESC samplerDesc;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	renderer->CreateSamplerState(&samplerDesc, &sampleState);
 }
 
 void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hsFilename, const wchar_t* dsFilename, const wchar_t* psFilename)
@@ -75,7 +92,7 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hs
 
 void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, 
 	LightManager* lightManager, Camera* cam, float tesDstRange[2], float tesHeightRange[2], float maxTessellation, 
-	ID3D11ShaderResourceView* heightTex)
+	ID3D11ShaderResourceView* heightTex, ID3D11ShaderResourceView* diffuseTextures[4])
 {	
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -110,7 +127,9 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->PSSetShaderResources(3, 1, &heightTex);
 	deviceContext->PSSetSamplers(1, 1, &heightSampleState);
 
-
+	//Diffuse textures 
+	deviceContext->PSSetShaderResources(4, 4, diffuseTextures);
+	deviceContext->PSSetSamplers(2, 1, &sampleState);
 }
 
 

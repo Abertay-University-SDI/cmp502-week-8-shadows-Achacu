@@ -1,7 +1,10 @@
 // Tessellation pixel shader
 // Output colour passed to stage.
 #include "light_utils.hlsli" //covers t0-2, b1 and s0 registers
-#include "heightmap.hlsli"
+#include "heightmap.hlsli" //covers t3 and s1
+
+Texture2D diffuseTextures[4] : register(t4);
+SamplerState diffuseSampler : register(s2);
 
 struct InputType
 {
@@ -18,7 +21,7 @@ float3 CalcNormal(float2 uv, out float uvStep)
     float texWidth, numOfLvls;
 	
     heightTex.GetDimensions(0, texWidth, texWidth, numOfLvls); //square tex so width = height
-    uvStep = 3.0f / texWidth; //uv (0 to 1): uvStep = 1.0 / texWidth; (we sample once per texture pixel=texel), uvStep = 1.0 / (texWidth/3) = 3.0 / texWidth; (we sample 3 times per texel)
+    uvStep = 3.0f / texWidth; //uv (0 to 1): uvStep = 1.0 / texWidth; (we sample once per texture -> pixel=texel), uvStep = 1.0 / (texWidth/3) = 3.0 / texWidth; (we sample 3 times per texel)
     float vertexWorldStep = 100.0 * uvStep; //distance between this vertex and the next (100x100 m plane in this case)
 	
 	//get neighboring heights
@@ -53,10 +56,17 @@ float4 main(InputType input) : SV_TARGET
 {
     float outUVStep;
     
-    float4 textureColor = input.colour; //shaderTexture.Sample(diffuseSampler, input.tex);
-    float4 finalSpecularColor;
-    float4 finalLightColor = applyLightingAndShadows(CalcNormal(input.tex, outUVStep), input.lightViewPos, input.worldPosition, camWorldPos, finalSpecularColor);
+    float4 finalTexColor;
+    float4 textureColor = diffuseTextures[0].Sample(diffuseSampler, input.tex * 20);
+    float4 textureColor2 = diffuseTextures[1].Sample(diffuseSampler, input.tex * 20);   
     
-    float4 finalColor = textureColor * finalLightColor + finalSpecularColor;
+    float3 normal = CalcNormal(input.tex, outUVStep);
+    
+    finalTexColor = lerp(textureColor, textureColor2, normal.y);
+    
+    float4 finalSpecularColor;
+    float4 finalLightColor = applyLightingAndShadows(normal, input.lightViewPos, input.worldPosition, camWorldPos, finalSpecularColor);
+    
+    float4 finalColor = finalTexColor * finalLightColor + finalSpecularColor;
     return finalColor;            
 }

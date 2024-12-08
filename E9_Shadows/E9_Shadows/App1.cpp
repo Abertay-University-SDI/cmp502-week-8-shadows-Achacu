@@ -45,6 +45,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture(L"height", L"res/heightmap.png");
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
+	textureMgr->loadTexture(L"grass", L"res/grass.jpg");
+	textureMgr->loadTexture(L"rock", L"res/rock_diffuse.tif");
+
+	diffuseTextures[0] = textureMgr->getTexture(L"rock");
+	diffuseTextures[1] = textureMgr->getTexture(L"grass");
 
 	// initial shaders
 	textureShader = new TextureShader(renderer->getDevice(), hwnd);
@@ -270,7 +275,7 @@ void App1::RenderSceneObjs(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX p
 	//Tessellated height map mesh
 	tesPlane->sendData(renderer->getDeviceContext());
 	heightMapShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("terrain"), viewMatrix, projectionMatrix,
-		lightManager, camera, tesDstRange, tesHeightRange, maxTessellation, textureMgr->getTexture(L"height"));
+		lightManager, camera, tesDstRange, tesHeightRange, maxTessellation, textureMgr->getTexture(L"height"), diffuseTextures);
 	heightMapShader->render(renderer->getDeviceContext(), tesPlane->getIndexCount());
 
 }
