@@ -23,12 +23,12 @@ struct InputType
     float4 lightViewPos[DIR_LIGHT_COUNT + SPOT_LIGHT_COUNT] : TEXCOORD1; //vertex position in light view space (light2Vertex distance can be computed from this)
 };
 
-float3 CalcNormal(float2 uv, out float uvStep)
+float3 CalcNormal(float2 uv)
 {
     float texWidth, numOfLvls;
 	
     heightTex.GetDimensions(0, texWidth, texWidth, numOfLvls); //square tex so width = height
-    uvStep = samplesPerTexel / texWidth; //uv (0 to 1): uvStep = 1.0 / texWidth; (we sample once per texture -> pixel=texel), uvStep = 1.0 / (texWidth/3) = 3.0 / texWidth; (we sample 3 times per texel)
+    float uvStep = samplesPerTexel / texWidth; //uv (0 to 1): uvStep = 1.0 / texWidth; (we sample once per texture -> pixel=texel), uvStep = 1.0 / (texWidth/3) = 3.0 / texWidth; (we sample 3 times per texel)
     float vertexWorldStep = 100.0 * uvStep; //distance between this vertex and the next (100x100 m plane in this case)
 	
 	//get neighboring heights
@@ -62,14 +62,24 @@ float3 CalcNormal(float2 uv, out float uvStep)
 float4 main(InputType input) : SV_TARGET
 {
     float outUVStep;
-    
     float4 finalTexColor;
+    
     float4 textureColor = diffuseTextures[0].Sample(diffuseSampler, input.tex * diffuseTexScales[0]);
-    float4 textureColor2 = diffuseTextures[1].Sample(diffuseSampler, input.tex * diffuseTexScales[1]);
     
-    float3 normal = CalcNormal(input.tex, outUVStep);
+    //tri-planar mapping: instead of sampling by uv it is done by world space coords in the principal planes
+    float4 tex1ColorX = diffuseTextures[1].Sample(diffuseSampler, /*input.tex * */diffuseTexScales[1]*input.worldPosition.yz);
+    float4 tex1ColorY = diffuseTextures[1].Sample(diffuseSampler, /*input.tex * */diffuseTexScales[1]*input.worldPosition.xz);
+    float4 tex1ColorZ = diffuseTextures[1].Sample(diffuseSampler, /*input.tex * */diffuseTexScales[1]*input.worldPosition.xy);
     
-    finalTexColor = lerp(textureColor2, textureColor, normal.y);
+    //float4 textureColor2 = diffuseTextures[1].Sample(diffuseSampler, input.tex * diffuseTexScales[1]);
+        
+    float3 normal = CalcNormal(input.tex);
+    
+    //the final tri-planar map color is a blend of all 3 weighted by the normal
+    float3 blend = normalize(abs(normal)); //normalized so it amounts to 1 and abs since the sign is not important
+    finalTexColor = blend.x * tex1ColorX + blend.y * tex1ColorY + blend.z * tex1ColorZ;
+    
+    //finalTexColor = lerp(textureColor2, textureColor, normal.y);
     
     float4 finalSpecularColor;
     float4 finalLightColor = applyLightingAndShadows(normal, input.lightViewPos, input.worldPosition, camWorldPos, finalSpecularColor);

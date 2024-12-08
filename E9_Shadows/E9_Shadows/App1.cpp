@@ -42,7 +42,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	tesPlane = new TessellationPlane(renderer->getDevice(), renderer->getDeviceContext(), 100);
 
 	//textureMgr->loadTexture(L"height", L"res/height.png");
-	textureMgr->loadTexture(L"height", L"res/heightmap.png");
+	textureMgr->loadTexture(L"height", L"res/heightmap7.png");
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 	textureMgr->loadTexture(L"grass", L"res/grass.jpg");
