@@ -101,7 +101,7 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hs
 
 void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, 
 	LightManager* lightManager, Camera* cam, float tesDstRange[2], float tesHeightRange[2], float maxTessellation, 
-	ID3D11ShaderResourceView* heightTex, ID3D11ShaderResourceView* diffuseTextures[4], float diffuseTexScales[4], int samplesPerTexel)
+	ID3D11ShaderResourceView* heightTex, ID3D11ShaderResourceView* diffuseTextures[4], ID3D11ShaderResourceView* paintTexturesMap, float diffuseTexScales[4], int samplesPerTexel)
 {	
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -145,7 +145,8 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->Unmap(heightmapPixelBuffer, 0);
 
 	deviceContext->PSSetConstantBuffers(2, 1, &heightmapPixelBuffer);
-	deviceContext->PSSetShaderResources(4, 4, diffuseTextures);
+	deviceContext->PSSetShaderResources(4, 1, &paintTexturesMap);
+	deviceContext->PSSetShaderResources(5, 4, diffuseTextures);
 	deviceContext->PSSetSamplers(2, 1, &sampleState);
 }
 

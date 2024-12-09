@@ -18,7 +18,7 @@ public:
 	TessellationShader(ID3D11Device* device, HWND hwnd);
 	~TessellationShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, LightManager* lightManager, Camera* cam, float tesDstRange[2], float tesHeightRange[2], float maxTessellation, ID3D11ShaderResourceView* heightTex, ID3D11ShaderResourceView* diffuseTextures[4], float diffuseTexScales[4], int samplesPerTexel);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, LightManager* lightManager, Camera* cam, float tesDstRange[2], float tesHeightRange[2], float maxTessellation, ID3D11ShaderResourceView* heightTex, ID3D11ShaderResourceView* diffuseTextures[4], ID3D11ShaderResourceView* paintTexturesMap, float diffuseTexScales[4], int samplesPerTexel);
 private:
 	struct TessellationBufferType
 	{

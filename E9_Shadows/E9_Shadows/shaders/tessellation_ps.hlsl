@@ -3,8 +3,9 @@
 #include "light_utils.hlsli" //covers t0-2, b0-1 and s0 registers
 #include "heightmap.hlsli" //covers t3 and s1
 
-Texture2D diffuseTextures[4] : register(t4);
-SamplerState diffuseSampler : register(s2);
+Texture2D paintTexturesMap : register(t4);
+Texture2D diffuseTextures[4] : register(t5);
+SamplerState linearSampler : register(s2);
 
 cbuffer HeightmapPixelBuffer : register(b2)
 {
@@ -61,24 +62,27 @@ float3 CalcNormal(float2 uv)
 
 float4 main(InputType input) : SV_TARGET
 {
-    float outUVStep;
-    float4 finalTexColor;
-    
-    float4 textureColor = diffuseTextures[0].Sample(diffuseSampler, input.tex * diffuseTexScales[0]);
-    
-    //tri-planar mapping: instead of sampling by uv it is done by world space coords in the principal planes
-    float4 tex1ColorX = diffuseTextures[1].Sample(diffuseSampler, /*input.tex * */diffuseTexScales[1]*input.worldPosition.yz);
-    float4 tex1ColorY = diffuseTextures[1].Sample(diffuseSampler, /*input.tex * */diffuseTexScales[1]*input.worldPosition.xz);
-    float4 tex1ColorZ = diffuseTextures[1].Sample(diffuseSampler, /*input.tex * */diffuseTexScales[1]*input.worldPosition.xy);
-    
-    //float4 textureColor2 = diffuseTextures[1].Sample(diffuseSampler, input.tex * diffuseTexScales[1]);
-        
     float3 normal = CalcNormal(input.tex);
+    
+    
+    float4 tex0Color = diffuseTextures[0].Sample(linearSampler, input.tex * diffuseTexScales[0]);
+
+        
+    //tri-planar mapping: instead of sampling by uv it is done by world space coords in the principal planes
+    float4 tex1ColorX = diffuseTextures[1].Sample(linearSampler, diffuseTexScales[1]*input.worldPosition.yz);
+    float4 tex1ColorY = diffuseTextures[1].Sample(linearSampler, diffuseTexScales[1]*input.worldPosition.xz);
+    float4 tex1ColorZ = diffuseTextures[1].Sample(linearSampler, diffuseTexScales[1]*input.worldPosition.xy);
     
     //the final tri-planar map color is a blend of all 3 weighted by the normal
     float3 blend = normalize(abs(normal)); //normalized so it amounts to 1 and abs since the sign is not important
-    finalTexColor = blend.x * tex1ColorX + blend.y * tex1ColorY + blend.z * tex1ColorZ;
+    float4 tex1Color = blend.x * tex1ColorX + blend.y * tex1ColorY + blend.z * tex1ColorZ;
+
     
+    float4 tex2Color = diffuseTextures[2].Sample(linearSampler, input.tex * diffuseTexScales[2]);
+    
+    
+    float3 paintWeights = normalize(paintTexturesMap.Sample(linearSampler, input.tex));
+    float4 finalTexColor = paintWeights.r * tex0Color + paintWeights.g * tex1Color + paintWeights.b * tex2Color;
     //finalTexColor = lerp(textureColor2, textureColor, normal.y);
     
     float4 finalSpecularColor;
