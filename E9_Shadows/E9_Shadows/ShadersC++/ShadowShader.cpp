@@ -62,7 +62,8 @@ void ShadowShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilena
 	InitLightingAndShadowInfo(renderer, matrixBuffer, lightMatrixBuffer, sampleStateShadow, cameraBuffer, lightBuffer);
 }
 
-void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, LightManager* lightManager, Camera* cam)
+void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, 
+	ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* normalMap, LightManager* lightManager, Camera* cam)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	
@@ -76,6 +77,7 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(3, 1, &texture);
+	if(normalMap != NULL) deviceContext->PSSetShaderResources(4, 1, &normalMap);
 	deviceContext->PSSetSamplers(1, 1, &sampleState);
 }
 

@@ -52,6 +52,8 @@ void PlaneMesh::initBuffers(ID3D11Device* device)
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);
 			vertices[index].texture = XMFLOAT2(u, v);
 			vertices[index].normal = XMFLOAT3(0.0, 1.0, 0.0);
+			vertices[index].tangent = XMFLOAT3(1.0, 0.0, 0.0);
+			vertices[index].binormal = XMFLOAT3(0.0, 0.0, 1.0);
 			indices[index] = index;
 			index++;
 
@@ -62,6 +64,8 @@ void PlaneMesh::initBuffers(ID3D11Device* device)
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);
 			vertices[index].texture = XMFLOAT2(u + increment, v + increment);
 			vertices[index].normal = XMFLOAT3(0.0, 1.0, 0.0);
+			vertices[index].tangent = XMFLOAT3(1.0, 0.0, 0.0);
+			vertices[index].binormal = XMFLOAT3(0.0, 0.0, 1.0);
 			indices[index] = index;
 			index++;
 
@@ -74,6 +78,8 @@ void PlaneMesh::initBuffers(ID3D11Device* device)
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);
 			vertices[index].texture = XMFLOAT2(u, v + increment);
 			vertices[index].normal = XMFLOAT3(0.0, 1.0, 0.0);
+			vertices[index].tangent = XMFLOAT3(1.0, 0.0, 0.0);
+			vertices[index].binormal = XMFLOAT3(0.0, 0.0, 1.0);
 			indices[index] = index;
 			index++;
 
@@ -84,6 +90,8 @@ void PlaneMesh::initBuffers(ID3D11Device* device)
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);
 			vertices[index].texture = XMFLOAT2(u, v);
 			vertices[index].normal = XMFLOAT3(0.0, 1.0, 0.0);
+			vertices[index].tangent = XMFLOAT3(1.0, 0.0, 0.0);
+			vertices[index].binormal = XMFLOAT3(0.0, 0.0, 1.0);
 			indices[index] = index;
 			index++;
 
@@ -94,6 +102,8 @@ void PlaneMesh::initBuffers(ID3D11Device* device)
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);
 			vertices[index].texture = XMFLOAT2(u + increment, v);
 			vertices[index].normal = XMFLOAT3(0.0, 1.0, 0.0);
+			vertices[index].tangent = XMFLOAT3(1.0, 0.0, 0.0);
+			vertices[index].binormal = XMFLOAT3(0.0, 0.0, 1.0);
 			indices[index] = index;
 			index++;
 
@@ -104,6 +114,8 @@ void PlaneMesh::initBuffers(ID3D11Device* device)
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);
 			vertices[index].texture = XMFLOAT2(u + increment, v + increment);
 			vertices[index].normal = XMFLOAT3(0.0, 1.0, 0.0);
+			vertices[index].tangent = XMFLOAT3(1.0, 0.0, 0.0);
+			vertices[index].binormal = XMFLOAT3(0.0, 0.0, 1.0);
 			indices[index] = index;
 			index++;
 

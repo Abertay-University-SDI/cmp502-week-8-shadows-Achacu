@@ -237,6 +237,8 @@ void AModel::processMesh(const aiMesh* mesh, const aiScene* scene)
 		XMFLOAT3 vert;
 		XMFLOAT2 text;
 		XMFLOAT3 norm;
+		XMFLOAT3 tan;
+		XMFLOAT3 bitan;
 
 		vert.x = mesh->mVertices[i].x;
 		vert.y = mesh->mVertices[i].y;
@@ -254,11 +256,23 @@ void AModel::processMesh(const aiMesh* mesh, const aiScene* scene)
 			norm.y = mesh->mNormals[i].y;
 			norm.z = mesh->mNormals[i].z;
 		}
+		if (mesh->HasTangentsAndBitangents())
+		{
+			tan.x = mesh->mTangents[i].x;
+			tan.y = mesh->mTangents[i].y;
+			tan.z = mesh->mTangents[i].z;
+
+			bitan.x = mesh->mBitangents[i].x;
+			bitan.y = mesh->mBitangents[i].y;
+			bitan.z = mesh->mBitangents[i].z;
+		}
 
 		VertexType vertex;
 		vertex.position = vert;
 		vertex.texture = text;
 		vertex.normal = norm;
+		vertex.tangent = tan;
+		vertex.binormal = bitan;
 		vertices.push_back(vertex);
 	}
 

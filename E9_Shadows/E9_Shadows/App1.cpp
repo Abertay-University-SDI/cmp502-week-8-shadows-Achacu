@@ -8,16 +8,6 @@ App1::App1()
 
 }
 
-float spherePos[3] = { 15.f, 2.f, -5.f };
-float teapotPos[3] = { 5.f, 2.f, -5.f };
-float teapotRot[3] = { 0,0,0 };
-float teapotScale[3] = { 0.3,0.3,0.3 };
-
-float lightPos[3] = { 0.f, 0.f, -20.f };
-float lightDir[3] = { 0.0f, -0.7f, 0.7f };
-float sceneCenter[3] = { 0.0f, 0.0f, 0.0f };
-float lightDstFromCenter = 10.0;
-
 int pointLightShadowMapIndex = 0;
 
 float screenAspect;
@@ -25,7 +15,6 @@ float screenAspect;
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
 	
-	//DirectionalLight::DirectionalLightInfo* info = &direLight.info;
 	screenAspect = (float)screenWidth / screenHeight;
 	// Call super/parent init function (required!)
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
@@ -46,7 +35,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 	textureMgr->loadTexture(L"grass", L"res/grass.jpg");
-	textureMgr->loadTexture(L"rock", L"res/rock_diffuse.tif");
+	textureMgr->loadTexture(L"rock", /*L"res/rock_diffuse.tif"*/L"res/brickwall.jpg");
+	textureMgr->loadTexture(L"rock_normal",/* L"res/rock_normal.tif"*/L"res/brickwall_normal.jpg");
 
 	diffuseTextures[0] = textureMgr->getTexture(L"grass");
 	diffuseTextures[1] = textureMgr->getTexture(L"rock");
@@ -165,16 +155,14 @@ void App1::depthPass(XMMATRIX lightViewMatrix, XMMATRIX lightProjMatrix)
 	depthShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
-	worldMatrix = XMMatrixTranslation(spherePos[0], spherePos[1], spherePos[2]);
 	sphere->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("sphere"), lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
 	depthShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 	worldMatrix = renderer->getWorldMatrix();
-	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
 	// Render model
 	model->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
+	depthShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("teapot"), lightViewMatrix, lightProjMatrix/*, lightPos, range*/);
 	depthShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 	//Tessellated height map mesh
@@ -221,25 +209,26 @@ void App1::RenderSceneObjs(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX p
 	// Render floor
 	mesh->sendData(renderer->getDeviceContext());
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix,
-		textureMgr->getTexture(L"wood"), lightManager, camera);
+		textureMgr->getTexture(L"rock"), textureMgr->getTexture(L"rock_normal"), lightManager, camera);
 	shadowShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	// Render model
 	worldMatrix = renderer->getWorldMatrix();
-	worldMatrix = XMMatrixScaling(teapotScale[0], teapotScale[1], teapotScale[2]) * XMMatrixRotationRollPitchYaw(teapotRot[0], teapotRot[1], teapotRot[2]) * XMMatrixTranslation(teapotPos[0], teapotPos[1], teapotPos[2]);
 	model->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), lightManager, camera);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("teapot"), viewMatrix, projectionMatrix, 
+		textureMgr->getTexture(L"rock"), textureMgr->getTexture(L"rock_normal"), lightManager, camera);
 	shadowShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 	//Render cube
 	cube->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("cube"), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), lightManager, camera);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("cube"), viewMatrix, projectionMatrix, 
+		textureMgr->getTexture(L"rock"), textureMgr->getTexture(L"rock_normal"), lightManager, camera);
 	shadowShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	//Render sphere
-	worldMatrix = XMMatrixTranslation(spherePos[0], spherePos[1], spherePos[2]);
 	sphere->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), lightManager, camera);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("sphere"), viewMatrix, projectionMatrix, 
+		textureMgr->getTexture(L"rock"), textureMgr->getTexture(L"rock_normal"), lightManager, camera);
 	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 	//Render light debug cubes
@@ -248,28 +237,33 @@ void App1::RenderSceneObjs(XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX p
 	for (auto it = lightManager->GetDirLightsBegin(); it != lightManager->GetDirLightsEnd(); it++)
 	{
 		worldMatrix = (it->second).GetWorldMatrix();
-		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale * worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale * worldMatrix, viewMatrix, projectionMatrix, 
+			textureMgr->getTexture(L"brick"));
 		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
 	for (auto it = lightManager->GetPointLightsBegin(); it != lightManager->GetPointLightsEnd(); it++)
 	{
 		worldMatrix = (it->second).GetWorldMatrix();
-		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale * worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale * worldMatrix, viewMatrix, projectionMatrix, 
+			textureMgr->getTexture(L"brick"));
 		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
 	for (auto it = lightManager->GetSpotLightsBegin(); it != lightManager->GetSpotLightsEnd(); it++)
 	{
 		worldMatrix = (it->second).GetWorldMatrix();
-		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale * worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"));
+		textureShader->setShaderParameters(renderer->getDeviceContext(), debugScale * worldMatrix, viewMatrix, projectionMatrix, 
+			textureMgr->getTexture(L"brick"));
 		textureShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
 
 	//portal A
 	quad->sendData(renderer->getDeviceContext());
-	portalShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("portalA"), viewMatrix, projectionMatrix, portalARenderTexture->getShaderResourceView());
+	portalShader->setShaderParameters(renderer->getDeviceContext(), tManager->GetTransformMatrix("portalA"), viewMatrix, projectionMatrix, 
+		portalARenderTexture->getShaderResourceView());
 	portalShader->render(renderer->getDeviceContext(), quad->getIndexCount());
 	//portal B
-	portalShader->setShaderParameters(renderer->getDeviceContext(), XMMatrixScaling(-1, 1, 1) * tManager->GetTransformMatrix("portalB"), viewMatrix, projectionMatrix, portalBRenderTexture->getShaderResourceView());
+	portalShader->setShaderParameters(renderer->getDeviceContext(), XMMatrixScaling(-1, 1, 1) * tManager->GetTransformMatrix("portalB"), viewMatrix, projectionMatrix, 
+		portalBRenderTexture->getShaderResourceView());
 	portalShader->render(renderer->getDeviceContext(), quad->getIndexCount());
 
 	//Tessellated height map mesh
@@ -349,12 +343,6 @@ void App1::gui()
 
 	ImGui::Text("PointShadowmapIndex");
 	ImGui::DragInt("PointShadowmapIndex", &pointLightShadowMapIndex, 0.1, 0, 5);
-	ImGui::Text("Sphere");
-	ImGui::DragFloat3("PositionSphere", spherePos, 0.1f, -50, 50);
-	ImGui::Text("Teapot");
-	ImGui::DragFloat3("PositionTeapot", teapotPos, 0.1f, -50, 50);
-	ImGui::SliderFloat3("RotationTeapot", teapotRot, -3.14, 3.14);
-	ImGui::SliderFloat3("ScaleTeapot", teapotScale, 0, 3);
 
 	ImGui::Text("Tessellation");
 	ImGui::DragFloat2("TesDstRange", tesDstRange, 0.1f, 0, 200);

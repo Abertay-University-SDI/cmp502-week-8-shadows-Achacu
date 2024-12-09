@@ -80,6 +80,7 @@ void CubeMesh::initBuffers(ID3D11Device* device)
 			vertices[v].texture = XMFLOAT2(txu, txv);
 			vertices[v].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
+
 			indices[i] = i;
 			v++;
 			i++;

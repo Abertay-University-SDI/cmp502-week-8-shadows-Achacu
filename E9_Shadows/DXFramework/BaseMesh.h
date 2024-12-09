@@ -27,6 +27,8 @@ protected:
 		XMFLOAT3 position;
 		XMFLOAT2 texture;
 		XMFLOAT3 normal;
+		XMFLOAT3 tangent;
+		XMFLOAT3 binormal;
 	};
 
 	/// Default vertex struct for geometry with only position and colour

@@ -95,8 +95,13 @@ void TransformManager::ReadTransform(string id, string transformStr)
 }
 
 
-string Float3ToStr(const float a[3]) {
-	return "{" + std::to_string(a[0]) + "," + std::to_string(a[1]) + "," + std::to_string(a[2]) + "}";
+static string Float3ToStr(const float a[3])
+{
+	std::stringstream ss = stringstream();
+	ss << std::defaultfloat << a[0] << ",";
+	ss << std::defaultfloat << a[1] << ",";
+	ss << std::defaultfloat << a[2];
+	return "{" + ss.str() + "}";
 }
 void TransformManager::WriteTransformDataToFile(string filePath)
 {
